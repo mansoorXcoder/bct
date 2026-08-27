@@ -422,7 +422,7 @@ This is a stronger research gap than simply stating:
 
 ---
 
-# 12. Paper → Gap → Proposed Feature
+<!-- # 12. Paper → Gap → Proposed Feature
 
 | Literature Gap | Proposed Feature |
 |---|---|
@@ -773,4 +773,4 @@ This document is based on the supplied 15-paper land-registration literature-sur
 
 ### Key Message for Presentation
 
-> **"The research gap is not the absence of blockchain-based land registration; it is the absence of a practical, integrated, legally aligned and interoperable solution that connects secure ownership records with identity, documents, spatial data and existing government workflows."**
+> **"The research gap is not the absence of blockchain-based land registration; it is the absence of a practical, integrated, legally aligned and interoperable solution that connects secure ownership records with identity, documents, spatial data and existing government workflows."** -->

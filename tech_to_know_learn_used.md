@@ -9,25 +9,25 @@
 
 # 1. Technology Stack
 
-| Layer | Technology | Project Role | Priority |
-|---|---|---|---|
-| Frontend | **React.js** | Web interface for citizens/admin | Must Learn |
-| Backend | **Node.js** | Server-side application | Must Learn |
-| Backend API | **Express.js** | REST API layer | Must Learn |
-| Database | **MongoDB** | Application / administrative data | Must Learn |
-| Blockchain | **Ethereum** | Blockchain network | Must Learn |
-| Smart Contract | **Solidity** | Registration and transfer logic | Must Learn |
-| Web3 | **Ethers.js / Web3.js** | Connect web app with blockchain | Must Learn |
-| Wallet | **MetaMask** | Wallet-based blockchain interaction | Must Learn |
-| Storage | **IPFS** | Off-chain land-document storage | Must Learn |
-| IPFS Service | **Pinata** | IPFS upload/pinning API | Learn |
-| Mapping | **GIS** | Land parcel/spatial information | Learn |
-| Testing Network | **Sepolia Testnet** | Blockchain testing | Learn |
-| Contract IDE | **Remix IDE** | Smart-contract development/testing | Learn |
-| Local Blockchain | **Ganache** | Local blockchain testing | Optional |
-| Development Framework | **Hardhat** | Contract development/testing/deployment | Learn |
-| Authentication | **RBAC / Web3 Authentication** | Access control | Must Learn |
-| Cryptography | **Hashing / Digital Signatures** | Integrity and verification | Must Learn |
+| Layer | Technology | Project Role |
+|---|---|---|
+| Frontend | **React.js** | Web interface for citizens/admin |
+| Backend | **Node.js** | Server-side application |
+| Backend API | **Express.js** | REST API layer |
+| Database | **MongoDB** | Application / administrative data |
+| Blockchain | **Ethereum** | Blockchain network |
+| Smart Contract | **Solidity** | Registration and transfer logic |
+| Web3 | **Ethers.js / Web3.js** | Connect web app with blockchain |
+| Wallet | **MetaMask** | Wallet-based blockchain interaction |
+| Storage | **IPFS** | Off-chain land-document storage |
+| IPFS Service | **Pinata** | IPFS upload/pinning API |
+| Mapping | **GIS** | Land parcel/spatial information |
+| Testing Network | **Sepolia Testnet** | Blockchain testing |
+| Contract IDE | **Remix IDE** | Smart-contract development/testing |
+| Local Blockchain | **Ganache** | Local blockchain testing |
+| Development Framework | **Hardhat** | Contract development/testing/deployment |
+| Authentication | **RBAC / Web3 Authentication** | Access control |
+| Cryptography | **Hashing / Digital Signatures** | Integrity and verification |
 
 ---
 
