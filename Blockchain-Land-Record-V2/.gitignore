@@ -1,0 +1,10 @@
+node_modules/
+.env
+
+documents/generated/
+database/*.db
+database/*.sqlite
+database/*.sqlite3
+
+ipfs/data/
+*.log

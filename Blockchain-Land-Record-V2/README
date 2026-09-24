@@ -1,0 +1,25 @@
+V2 DEVELOPMENT NETWORK
+
+Ganache Workspace:
+LandRecord-V2-V4
+
+RPC:
+http://127.0.0.1:7546
+
+Network ID:
+5778
+
+Chain ID:
+1337
+
+Accounts:
+10
+
+Hardfork:
+Merge
+
+Mining:
+Automining
+
+Environment:
+Local development only

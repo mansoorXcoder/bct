@@ -1,0 +1,663 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Blockchain Land Record Management System</title>
+
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <!-- =====================================================
+     HEADER
+===================================================== -->
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">LR</div>
+
+        <div>
+          <h1>Blockchain Land Record</h1>
+
+          <p>Secure Land Lifecycle Management</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <span id="networkBadge" class="badge offline">
+          Checking Blockchain
+        </span>
+
+        <span id="sessionLabel" class="session-label"> Public </span>
+
+        <button
+          id="connectWalletBtn"
+          class="btn primary"
+          onclick="connectWallet()"
+        >
+          Connect MetaMask
+        </button>
+
+        <button
+          id="logoutWalletBtn"
+          class="btn secondary hidden"
+          onclick="logoutApplication()"
+        >
+          Logout
+        </button>
+      </div>
+    </header>
+
+    <!-- =====================================================
+     NOTIFICATION
+===================================================== -->
+
+    <div id="notification" class="notification hidden"></div>
+
+    <!-- =====================================================
+     MAIN
+===================================================== -->
+
+    <main class="app-shell">
+      <!-- =================================================
+         PUBLIC HERO
+    ================================================== -->
+
+      <section id="publicHero" class="hero">
+        <div>
+          <span class="eyebrow"> BLOCKCHAIN LAND REGISTRY </span>
+
+          <h2>
+            Secure land records.
+            <br />
+            Controlled lifecycle management.
+          </h2>
+
+          <p>
+            Search permitted land information publicly, or connect a registered
+            account to access role-based land management workflows.
+          </p>
+        </div>
+
+        <div class="hero-actions">
+          <button class="btn primary large" onclick="showPage('lands')">
+            Search Land
+          </button>
+
+          <button class="btn secondary large" onclick="connectWallet()">
+            Connect Account
+          </button>
+        </div>
+      </section>
+
+      <!-- =================================================
+         NAVIGATION
+    ================================================== -->
+
+      <nav id="mainNavigation" class="navigation hidden">
+        <button class="nav-btn active" data-page="dashboard">Dashboard</button>
+
+        <button class="nav-btn" data-page="lands">Land Registry</button>
+
+        <button class="nav-btn" data-page="requests">Requests</button>
+
+        <button class="nav-btn" data-page="documents">Documents</button>
+
+        <button class="nav-btn" data-page="history">Land History</button>
+
+        <button class="nav-btn" data-page="audit">Audit</button>
+      </nav>
+
+      <!-- =================================================
+         DASHBOARD
+    ================================================== -->
+
+      <section id="page-dashboard" class="page">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow"> OVERVIEW </span>
+
+            <h2 id="dashboardTitle">Dashboard</h2>
+
+            <p id="dashboardSubtitle">Land record management overview.</p>
+          </div>
+        </div>
+
+        <!-- Statistics -->
+
+        <div id="statsGrid" class="stats-grid"></div>
+
+        <!-- Role-specific dashboard -->
+
+        <div id="roleDashboard" class="content-stack"></div>
+      </section>
+
+      <!-- =================================================
+         LAND REGISTRY
+    ================================================== -->
+
+      <section id="page-lands" class="page hidden">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow"> LAND REGISTRY </span>
+
+            <h2>Land Records</h2>
+
+            <p>Search and manage permitted land records.</p>
+          </div>
+        </div>
+
+        <!-- Search -->
+
+        <div class="panel">
+          <div class="panel-heading">
+            <div>
+              <h3>Search Registry</h3>
+
+              <p>Search using a Land ID or Survey Number.</p>
+            </div>
+          </div>
+
+          <div class="search-row">
+            <input
+              id="landSearchInput"
+              type="text"
+              placeholder="Example: LR-2026-0003 or SURV-003"
+            />
+
+            <button class="btn primary" onclick="searchLand()">Search</button>
+
+            <button class="btn secondary" onclick="loadAllLands()">
+              Show Records
+            </button>
+          </div>
+        </div>
+
+        <!-- Officer / Citizen operations -->
+
+        <div id="landActions" class="action-bar"></div>
+
+        <!-- Register land -->
+
+        <div id="registerLandPanel" class="panel hidden">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow"> OFFICER OPERATION </span>
+
+              <h3>Register Land</h3>
+
+              <p>Create a new land parcel in the registry.</p>
+            </div>
+          </div>
+
+          <form id="registerLandForm">
+            <div class="form-grid">
+              <div class="field">
+                <label> Survey Number </label>
+
+                <input id="registerSurveyNumber" required />
+              </div>
+
+              <div class="field">
+                <label> Parcel Area </label>
+
+                <input id="registerParcelArea" type="number" min="0" required />
+              </div>
+
+              <div class="field">
+                <label> Area Unit </label>
+
+                <select id="registerAreaUnit">
+                  <option value="SQ_FT">SQ_FT</option>
+
+                  <option value="SQ_M">SQ_M</option>
+
+                  <option value="ACRE">ACRE</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label> Land Type </label>
+
+                <select id="registerLandType">
+                  <option value="RESIDENTIAL">RESIDENTIAL</option>
+
+                  <option value="AGRICULTURAL">AGRICULTURAL</option>
+
+                  <option value="COMMERCIAL">COMMERCIAL</option>
+
+                  <option value="INDUSTRIAL">INDUSTRIAL</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label> Land Use </label>
+
+                <input
+                  id="registerLandUse"
+                  placeholder="Example: RESIDENTIAL_USE"
+                  required
+                />
+              </div>
+
+              <div class="field">
+                <label> Zone </label>
+
+                <input
+                  id="registerZone"
+                  placeholder="Example: RESIDENTIAL"
+                  required
+                />
+              </div>
+
+              <div class="field field-wide">
+                <label> Location </label>
+
+                <input id="registerLocation" required />
+              </div>
+
+              <div class="field">
+                <label> Latitude </label>
+
+                <input id="registerLatitude" type="number" step="any" />
+              </div>
+
+              <div class="field">
+                <label> Longitude </label>
+
+                <input id="registerLongitude" type="number" step="any" />
+              </div>
+
+              <div class="field">
+                <label> Region </label>
+
+                <input id="registerRegion" readonly />
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn primary">Register Land</button>
+
+              <button
+                type="button"
+                class="btn secondary"
+                onclick="hide('registerLandPanel')"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Allocation -->
+
+        <div id="allocationPanel" class="panel hidden">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow"> OFFICER OPERATION </span>
+
+              <h3>Allocate Government Land</h3>
+
+              <p>
+                Allocate an available government parcel to a registered citizen.
+              </p>
+            </div>
+          </div>
+
+          <form id="allocationForm">
+            <div class="form-grid">
+              <div class="field">
+                <label> Land ID </label>
+
+                <input
+                  id="allocationLandId"
+                  placeholder="LR-2026-0001"
+                  required
+                />
+              </div>
+
+              <div class="field">
+                <label> Citizen </label>
+
+                <select id="allocationCitizenId" required>
+                  <option value="">Select Citizen</option>
+                </select>
+              </div>
+
+              <div class="field field-wide">
+                <label> Allocation Reason </label>
+
+                <textarea id="allocationReason" rows="3" required></textarea>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn primary">Allocate Land</button>
+
+              <button
+                type="button"
+                class="btn secondary"
+                onclick="hide('allocationPanel')"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Land results -->
+
+        <div id="landResults" class="content-stack">
+          <div class="empty">
+            <h3>Land registry</h3>
+
+            <p>Search for a parcel or load accessible records.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================
+         REQUESTS
+    ================================================== -->
+
+      <section id="page-requests" class="page hidden">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow"> TRANSACTION WORKFLOW </span>
+
+            <h2>Land Requests</h2>
+
+            <p>Ownership transfers and authorized land modifications.</p>
+          </div>
+        </div>
+
+        <!-- Citizen request creation -->
+
+        <div id="citizenRequestPanel" class="panel hidden">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow"> CITIZEN </span>
+
+              <h3>Create Land Request</h3>
+
+              <p>Submit an ownership transfer or land modification.</p>
+            </div>
+          </div>
+
+          <form id="requestForm">
+            <div class="form-grid">
+              <div class="field">
+                <label> Request Type </label>
+
+                <select id="requestType" required>
+                  <option value="OWNERSHIP_TRANSFER">Ownership Transfer</option>
+
+                  <option value="AREA_MODIFICATION">Area Modification</option>
+
+                  <option value="LAND_USE_MODIFICATION">
+                    Land-Use Modification
+                  </option>
+
+                  <option value="LAND_TYPE_MODIFICATION">
+                    Land-Type Modification
+                  </option>
+
+                  <option value="OTHER_MODIFICATION">Other Modification</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label> Land ID </label>
+
+                <input id="requestLandId" placeholder="LR-2026-0003" required />
+              </div>
+
+              <!-- Buyer -->
+
+              <div id="buyerWrap" class="field">
+                <label> Buyer </label>
+
+                <select id="requestBuyerId">
+                  <option value="">Select Buyer</option>
+                </select>
+              </div>
+
+              <!-- Amount -->
+
+              <div id="amountWrap" class="field">
+                <label> Agreed Amount (INR) </label>
+
+                <input
+                  id="requestAmount"
+                  type="number"
+                  min="0"
+                  placeholder="Optional"
+                />
+              </div>
+
+              <!-- Area -->
+
+              <div id="areaWrap" class="field hidden">
+                <label> Requested Area </label>
+
+                <input id="requestArea" type="number" min="0" />
+              </div>
+
+              <div id="areaUnitWrap" class="field hidden">
+                <label> Area Unit </label>
+
+                <select id="requestAreaUnit">
+                  <option value="SQ_FT">SQ_FT</option>
+
+                  <option value="SQ_M">SQ_M</option>
+
+                  <option value="ACRE">ACRE</option>
+                </select>
+              </div>
+
+              <!-- Land use -->
+
+              <div id="useWrap" class="field hidden">
+                <label> Requested Land Use </label>
+
+                <input
+                  id="requestLandUse"
+                  placeholder="Example: COMMERCIAL_USE"
+                />
+              </div>
+
+              <!-- Land type -->
+
+              <div id="typeWrap" class="field hidden">
+                <label> Requested Land Type </label>
+
+                <select id="requestLandType">
+                  <option value="RESIDENTIAL">RESIDENTIAL</option>
+
+                  <option value="AGRICULTURAL">AGRICULTURAL</option>
+
+                  <option value="COMMERCIAL">COMMERCIAL</option>
+
+                  <option value="INDUSTRIAL">INDUSTRIAL</option>
+                </select>
+              </div>
+
+              <!-- Reason -->
+
+              <div class="field field-wide">
+                <label> Reason / Details </label>
+
+                <textarea
+                  id="requestReason"
+                  rows="4"
+                  placeholder="Describe the purpose of this request."
+                  required
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="info-box">
+              <strong> Workflow </strong>
+
+              <span>
+                Request → Validation → Authority Review → Approval → Registered
+                Record
+              </span>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn primary">Submit Request</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Request filter -->
+
+        <div class="panel">
+          <div class="filter-row">
+            <div>
+              <h3>Requests</h3>
+
+              <p>View requests relevant to your role.</p>
+            </div>
+
+            <div class="filter-controls">
+              <select id="requestStatusFilter" onchange="loadRequests()">
+                <option value="">All Statuses</option>
+
+                <option value="DRAFT">DRAFT</option>
+
+                <option value="PENDING_BUYER_ACCEPTANCE">
+                  PENDING BUYER ACCEPTANCE
+                </option>
+
+                <option value="PENDING_AUTHORITY_REVIEW">
+                  PENDING AUTHORITY REVIEW
+                </option>
+
+                <option value="APPROVED">APPROVED</option>
+
+                <option value="COMPLETED">COMPLETED</option>
+
+                <option value="REJECTED">REJECTED</option>
+              </select>
+
+              <button class="btn secondary" onclick="loadRequests()">
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="requestContent" class="content-stack"></div>
+      </section>
+
+      <!-- =================================================
+         DOCUMENTS
+    ================================================== -->
+
+      <section id="page-documents" class="page hidden">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow"> DOCUMENT MANAGEMENT </span>
+
+            <h2>Documents</h2>
+
+            <p>
+              System-generated records and blockchain verification references.
+            </p>
+          </div>
+        </div>
+
+        <div class="info-box">
+          <strong> Verification chain </strong>
+
+          <span> PDF → SHA-256 → IPFS → Blockchain Anchor </span>
+        </div>
+
+        <div id="documentContent" class="content-stack"></div>
+      </section>
+
+      <!-- =================================================
+         HISTORY
+    ================================================== -->
+
+      <section id="page-history" class="page hidden">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow"> LAND LIFECYCLE </span>
+
+            <h2>Land History</h2>
+
+            <p>Chronological record of ownership and land modifications.</p>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="search-row">
+            <input id="historyLandId" placeholder="Enter Land ID" />
+
+            <button class="btn primary" onclick="loadHistory()">
+              View History
+            </button>
+          </div>
+        </div>
+
+        <div id="historyContent" class="content-stack">
+          <div class="empty">
+            <h3>Select a land record</h3>
+
+            <p>The complete lifecycle will appear as a timeline.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================
+         AUDIT
+    ================================================== -->
+
+      <section id="page-audit" class="page hidden">
+        <div class="page-heading">
+          <div>
+            <span class="eyebrow"> SYSTEM AUDIT </span>
+
+            <h2>Audit Trail</h2>
+
+            <p>
+              Administrative and transaction activity recorded by the system.
+            </p>
+          </div>
+
+          <button class="btn secondary" onclick="loadAudit()">Refresh</button>
+        </div>
+
+        <div id="auditContent" class="content-stack"></div>
+      </section>
+    </main>
+
+    <!-- =====================================================
+     FOOTER
+===================================================== -->
+
+    <footer class="footer">
+      <div>
+        <strong> Blockchain Land Record Management System </strong>
+
+        <span> V2 Prototype </span>
+      </div>
+
+      <span>
+        Blockchain-backed verification · Database registry · IPFS documents
+      </span>
+    </footer>
+
+    <!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+    <script src="app.js"></script>
+  </body>
+</html>
