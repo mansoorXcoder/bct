@@ -1,4 +1,14 @@
 require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
+
+const {
+    getLandHistory
+} = require("./services/landTransaction.service");
+
+const {
+    getDocumentById
+} = require("./services/document.service");
 const landRoutes = require("./routes/land.routes");
 const express = require("express");
 const cors = require("cors");
@@ -84,6 +94,142 @@ app.use("/api/users", userRoutes);
 app.use(
     "/api/requests",
     requestRoutes
+);
+// --------------------------------------------------
+// Land History
+// --------------------------------------------------
+
+app.get(
+    "/api/lands/:landId/history",
+    (req, res) => {
+
+        try {
+
+            const {
+                landId
+            } = req.params;
+
+            const history =
+                getLandHistory(
+                    landId
+                );
+
+            res.json({
+
+                status:
+                    "success",
+
+                landId,
+
+                count:
+                    history.length,
+
+                data:
+                    history
+
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Land history error:",
+                error
+            );
+
+            res.status(
+                error.statusCode || 500
+            ).json({
+
+                status:
+                    "error",
+
+                message:
+                    error.message ||
+                    "Unable to load land history."
+
+            });
+        }
+    }
+);
+
+
+// --------------------------------------------------
+// Document PDF
+// --------------------------------------------------
+
+app.get(
+    "/api/documents/:documentId/download",
+    (req, res) => {
+
+        try {
+
+            const {
+                documentId
+            } = req.params;
+
+            const document =
+                getDocumentById(
+                    documentId
+                );
+
+            if (!document) {
+
+                return res.status(404).json({
+
+                    status:
+                        "error",
+
+                    message:
+                        "Document not found."
+
+                });
+            }
+
+            const filePath =
+                path.resolve(
+                    document.filePath
+                );
+
+            if (
+                !fs.existsSync(
+                    filePath
+                )
+            ) {
+
+                return res.status(404).json({
+
+                    status:
+                        "error",
+
+                    message:
+                        "PDF file is not available on the server."
+
+                });
+            }
+
+            res.sendFile(
+                filePath
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Document download error:",
+                error
+            );
+
+            res.status(500).json({
+
+                status:
+                    "error",
+
+                message:
+                    error.message ||
+                    "Unable to open document."
+
+            });
+        }
+    }
 );
 // --------------------------------------------------
 // Health Check

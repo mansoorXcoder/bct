@@ -14,14 +14,15 @@ const {
 
     getDocumentsByLand,
 
-    getDocumentsByRequest
+    getDocumentsByRequest,
+
+    downloadDocument
 
 } =
     require("../controllers/document.controller");
 
-
 // =========================================================
-// CREATE
+// CREATE DOCUMENT
 // =========================================================
 
 router.post(
@@ -29,6 +30,10 @@ router.post(
     createDocument
 );
 
+
+// =========================================================
+// CREATE PRELIMINARY DOCUMENT
+// =========================================================
 
 router.post(
     "/preliminary",
@@ -57,7 +62,26 @@ router.get(
 
 
 // =========================================================
-// SINGLE DOCUMENT
+// DOWNLOAD / OPEN PDF
+// IMPORTANT:
+// Keep this BEFORE /:documentId
+// =========================================================
+
+router.get(
+    "/:documentId/download",
+    downloadDocument
+);
+
+// =========================================================
+// DOWNLOAD GENERATED PDF
+// =========================================================
+
+router.get(
+    "/:documentId/download",
+    downloadDocument
+);
+// =========================================================
+// SINGLE DOCUMENT DETAILS
 // =========================================================
 
 router.get(

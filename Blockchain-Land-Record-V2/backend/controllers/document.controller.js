@@ -1,3 +1,7 @@
+const fs =
+    require("fs");
+const path = require("path");
+
 const documentService =
     require("../services/document.service");
 
@@ -15,7 +19,7 @@ async function createDocument(req, res) {
                 req.body
             );
 
-        res.status(201).json({
+        return res.status(201).json({
 
             status: "success",
 
@@ -34,7 +38,7 @@ async function createDocument(req, res) {
             error.message
         );
 
-        res.status(
+        return res.status(
             error.statusCode || 500
         ).json({
 
@@ -66,7 +70,7 @@ async function createPreliminaryDocument(
                 req.body
             );
 
-        res.status(201).json({
+        return res.status(201).json({
 
             status: "success",
 
@@ -85,7 +89,7 @@ async function createPreliminaryDocument(
             error.message
         );
 
-        res.status(
+        return res.status(
             error.statusCode || 500
         ).json({
 
@@ -102,10 +106,69 @@ async function createPreliminaryDocument(
 
 
 // =========================================================
-// GET DOCUMENT
+// GET DOCUMENT DETAILS
 // =========================================================
 
 function getDocumentById(
+    req,
+    res
+) {
+
+    try {
+
+        const document =
+            documentService.getDocumentById(
+                req.params.documentId
+            );
+
+        if (!document) {
+
+            return res.status(404).json({
+
+                status: "error",
+
+                message:
+                    "Document not found."
+
+            });
+
+        }
+
+        return res.json({
+
+            status: "success",
+
+            data:
+                document
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Get document error:",
+            error.message
+        );
+
+        return res.status(
+            error.statusCode || 500
+        ).json({
+
+            status: "error",
+
+            message:
+                error.message
+
+        });
+
+    }
+
+}
+// =========================================================
+// DOWNLOAD / OPEN GENERATED PDF
+// =========================================================
+
+function downloadDocument(
     req,
     res
 ) {
@@ -122,7 +185,8 @@ function getDocumentById(
 
             return res.status(404).json({
 
-                status: "error",
+                status:
+                    "error",
 
                 message:
                     "Document not found."
@@ -132,23 +196,164 @@ function getDocumentById(
         }
 
 
-        res.json({
+        if (!document.filePath) {
 
-            status: "success",
+            return res.status(404).json({
 
-            data:
-                document
+                status:
+                    "error",
 
-        });
+                message:
+                    "Document file path is unavailable."
+
+            });
+
+        }
+
+
+        if (
+            !fs.existsSync(
+                document.filePath
+            )
+        ) {
+
+            return res.status(404).json({
+
+                status:
+                    "error",
+
+                message:
+                    "Generated PDF file was not found on the server."
+
+            });
+
+        }
+
+
+        res.type(
+            "application/pdf"
+        );
+
+
+        res.sendFile(
+            document.filePath
+        );
+
 
     } catch (error) {
 
         console.error(
-            "Get document error:",
+            "Download document error:",
             error.message
         );
 
+
         res.status(
+            error.statusCode || 500
+        ).json({
+
+            status:
+                "error",
+
+            message:
+                error.message
+
+        });
+
+    }
+
+}
+
+// =========================================================
+// DOWNLOAD / OPEN PDF
+// =========================================================
+
+function downloadDocument(
+    req,
+    res
+) {
+
+    try {
+
+        const document =
+            documentService.getDocumentById(
+                req.params.documentId
+            );
+
+        if (!document) {
+
+            return res.status(404).json({
+
+                status: "error",
+
+                message:
+                    "Document not found."
+
+            });
+
+        }
+
+        if (!document.filePath) {
+
+            return res.status(404).json({
+
+                status: "error",
+
+                message:
+                    "PDF file path is not available."
+
+            });
+
+        }
+
+        const filePath =
+            path.resolve(
+                document.filePath
+            );
+
+        if (!fs.existsSync(filePath)) {
+
+            return res.status(404).json({
+
+                status: "error",
+
+                message:
+                    "PDF file does not exist on the server."
+
+            });
+
+        }
+
+        const safeFileName =
+            `${document.documentId}.pdf`;
+
+        res.setHeader(
+            "Content-Type",
+            "application/pdf"
+        );
+
+        res.setHeader(
+            "Content-Disposition",
+            `inline; filename="${safeFileName}"`
+        );
+
+        res.setHeader(
+            "Cache-Control",
+            "no-store"
+        );
+
+        return res.sendFile(
+            filePath
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Download document error:",
+            error.message
+        );
+
+        return res.status(
             error.statusCode || 500
         ).json({
 
@@ -180,8 +385,7 @@ function getDocumentsByLand(
                 req.params.landId
             );
 
-
-        res.json({
+        return res.json({
 
             status: "success",
 
@@ -200,7 +404,7 @@ function getDocumentsByLand(
             error.message
         );
 
-        res.status(
+        return res.status(
             error.statusCode || 500
         ).json({
 
@@ -232,8 +436,7 @@ function getDocumentsByRequest(
                 req.params.requestId
             );
 
-
-        res.json({
+        return res.json({
 
             status: "success",
 
@@ -252,7 +455,7 @@ function getDocumentsByRequest(
             error.message
         );
 
-        res.status(
+        return res.status(
             error.statusCode || 500
         ).json({
 
@@ -282,6 +485,8 @@ module.exports = {
 
     getDocumentsByLand,
 
-    getDocumentsByRequest
+    getDocumentsByRequest,
+
+    downloadDocument
 
 };

@@ -19,6 +19,11 @@ const {
 } =
     require("./blockchain.service");
 
+const {
+    createDocument
+} =
+    require("./document.service");
+
 
 // =========================================================
 // ERROR HELPER
@@ -36,7 +41,6 @@ function fail(
         statusCode;
 
     throw error;
-
 }
 
 
@@ -319,19 +323,21 @@ async function allocateLand(
     }
 
 
-    // ethers tuple returned from Solidity:
-    //
-    // [0] landId
-    // [1] surveyNumber
-    // [2] parcelArea
-    // [3] areaUnit
-    // [4] location
-    // [5] landUseType
-    // [6] zone
-    // [7] regionId
-    // [8] currentOwner
-    // [9] status
-    // [10] exists
+    /*
+     * Solidity tuple:
+     *
+     * [0]  landId
+     * [1]  surveyNumber
+     * [2]  parcelArea
+     * [3]  areaUnit
+     * [4]  location
+     * [5]  landUseType
+     * [6]  zone
+     * [7]  regionId
+     * [8]  currentOwner
+     * [9]  status
+     * [10] exists
+     */
 
 
     const blockchainExists =
@@ -347,6 +353,10 @@ async function allocateLand(
 
     }
 
+
+    // =====================================================
+    // REGION MATCH
+    // =====================================================
 
     const blockchainRegion =
         blockchainLand[7];
@@ -365,14 +375,20 @@ async function allocateLand(
     }
 
 
-    // Solidity enum:
-    //
-    // NONE      = 0
-    // AVAILABLE = 1
-    // ALLOCATED = 2
-    // TRANSFER_PENDING = 3
-    // UPDATE_PENDING = 4
-    // SUSPENDED = 5
+    // =====================================================
+    // BLOCKCHAIN STATUS
+    // =====================================================
+
+    /*
+     * Solidity enum:
+     *
+     * NONE             = 0
+     * AVAILABLE        = 1
+     * ALLOCATED        = 2
+     * TRANSFER_PENDING = 3
+     * UPDATE_PENDING   = 4
+     * SUSPENDED        = 5
+     */
 
 
     const blockchainStatus =
@@ -382,7 +398,8 @@ async function allocateLand(
 
 
     if (
-        blockchainStatus !== 1
+        blockchainStatus !==
+        1
     ) {
 
         fail(
@@ -409,6 +426,19 @@ async function allocateLand(
         );
 
 
+    if (
+        !blockchainResult ||
+        !blockchainResult.transactionHash
+    ) {
+
+        fail(
+            "Blockchain allocation completed without a transaction hash.",
+            502
+        );
+
+    }
+
+
     // =====================================================
     // DATABASE UPDATE
     // =====================================================
@@ -417,220 +447,231 @@ async function allocateLand(
         new Date().toISOString();
 
 
-    const transaction =
-        db.transaction(() => {
+    const transactionResult =
+        db.transaction(
+            () => {
+
+                // -------------------------------------------------
+                // ALLOCATION ID
+                // -------------------------------------------------
+
+                const allocationId =
+                    `ALLOC-${Date.now()}`;
 
 
-            // -------------------------------------------------
-            // ALLOCATIONS TABLE
-            // -------------------------------------------------
+                // -------------------------------------------------
+                // ALLOCATIONS TABLE
+                // -------------------------------------------------
 
-            const allocationId =
-                `ALLOC-${Date.now()}`;
+                db.prepare(`
+                    INSERT INTO allocations (
 
+                        allocation_id,
 
-            db.prepare(`
-                INSERT INTO allocations (
+                        land_id,
 
-                    allocation_id,
+                        citizen_id,
 
-                    land_id,
+                        officer_id,
 
-                    citizen_id,
+                        region_id,
 
-                    officer_id,
+                        reason,
 
-                    reason,
+                        status,
 
-                    blockchain_reference,
+                        created_at
 
-                    allocated_at,
+                    )
 
-                    created_at
+                    VALUES (
 
-                )
+                        ?, ?, ?, ?, ?,
+                        ?, ?, ?
 
-                VALUES (
+                    )
+                `)
+                .run(
 
-                    ?, ?, ?, ?, ?,
-                    ?, ?, ?
+                    allocationId,
 
-                )
-            `)
-            .run(
+                    landId,
 
-                allocationId,
+                    citizenId,
 
-                landId,
+                    officerId,
 
-                citizenId,
-
-                officerId,
-
-                reason,
-
-                blockchainResult.transactionHash,
-
-                allocatedAt,
-
-                allocatedAt
-
-            );
-
-
-            // -------------------------------------------------
-            // LAND TABLE
-            // -------------------------------------------------
-
-            db.prepare(`
-                UPDATE lands
-
-                SET
-
-                    current_owner_id = ?,
-
-                    owner_type = ?,
-
-                    ownership_status = ?,
-
-                    status = ?,
-
-                    allocated_at = ?,
-
-                    updated_at = ?
-
-                WHERE land_id = ?
-            `)
-            .run(
-
-                citizenId,
-
-                "CITIZEN",
-
-                "CITIZEN_OWNED",
-
-                "ALLOCATED",
-
-                allocatedAt,
-
-                allocatedAt,
-
-                landId
-
-            );
-
-
-            // -------------------------------------------------
-            // LAND HISTORY
-            // -------------------------------------------------
-
-            db.prepare(`
-                INSERT INTO land_events (
-
-                    land_id,
-
-                    request_id,
-
-                    event_type,
-
-                    previous_owner_id,
-
-                    new_owner_id,
-
-                    previous_area,
-
-                    new_area,
-
-                    previous_land_use,
-
-                    new_land_use,
-
-                    previous_land_type,
-
-                    new_land_type,
+                    land.regionId,
 
                     reason,
 
-                    performed_by,
+                    "COMPLETED",
 
-                    document_id,
+                    allocatedAt
 
-                    blockchain_reference,
-
-                    description,
-
-                    created_at
-
-                )
-
-                VALUES (
-
-                    ?, NULL, ?,
-
-                    ?, ?,
-
-                    ?, ?,
-
-                    ?, ?,
-
-                    ?, ?,
-
-                    ?, ?,
-
-                    NULL,
-
-                    ?,
-
-                    ?,
-
-                    ?,
-
-                    ?
-
-                )
-            `)
-            .run(
-
-                landId,
-
-                "LAND_ALLOCATION",
-
-                null,
-
-                citizenId,
-
-                land.parcelArea,
-
-                land.parcelArea,
-
-                land.landUseType,
-
-                land.landUseType,
-
-                land.landType,
-
-                land.landType,
-
-                reason,
-
-                officerId,
-
-                blockchainResult.transactionHash,
-
-                `Government land ${landId} allocated to citizen ${citizenId}.`,
-
-                allocatedAt
-
-            );
+                );
 
 
-            return allocationId;
+                // -------------------------------------------------
+                // LAND TABLE
+                // -------------------------------------------------
 
-        });
+                db.prepare(`
+                    UPDATE lands
+
+                    SET
+
+                        current_owner_id = ?,
+
+                        owner_type = ?,
+
+                        ownership_status = ?,
+
+                        status = ?,
+
+                        allocated_at = ?,
+
+                        updated_at = ?
+
+                    WHERE land_id = ?
+                `)
+                .run(
+
+                    citizenId,
+
+                    "CITIZEN",
+
+                    "CITIZEN_OWNED",
+
+                    "ALLOCATED",
+
+                    allocatedAt,
+
+                    allocatedAt,
+
+                    landId
+
+                );
+
+
+                // -------------------------------------------------
+                // LAND HISTORY
+                // -------------------------------------------------
+
+                const eventResult =
+                    db.prepare(`
+                        INSERT INTO land_events (
+
+                            land_id,
+
+                            request_id,
+
+                            event_type,
+
+                            previous_owner_id,
+
+                            new_owner_id,
+
+                            previous_area,
+
+                            new_area,
+
+                            previous_land_use,
+
+                            new_land_use,
+
+                            previous_land_type,
+
+                            new_land_type,
+
+                            reason,
+
+                            performed_by,
+
+                            document_id,
+
+                            blockchain_reference,
+
+                            description,
+
+                            created_at
+
+                        )
+
+                        VALUES (
+
+                            ?, NULL, ?,
+
+                            ?, ?,
+
+                            ?, ?,
+
+                            ?, ?,
+
+                            ?, ?,
+
+                            ?, ?,
+
+                            NULL,
+
+                            ?,
+
+                            ?,
+
+                            ?
+
+                        )
+                    `)
+                    .run(
+
+                        landId,
+
+                        "LAND_ALLOCATION",
+
+                        null,
+
+                        citizenId,
+
+                        land.parcelArea,
+
+                        land.parcelArea,
+
+                        land.landUseType,
+
+                        land.landUseType,
+
+                        land.landType,
+
+                        land.landType,
+
+                        reason,
+
+                        officerId,
+
+                        blockchainResult.transactionHash,
+
+                        `Government land ${landId} allocated to citizen ${citizenId}.`,
+
+                        allocatedAt
+
+                    );
+
+
+                return {
+
+                    allocationId,
+
+                    eventId:
+                        eventResult.lastInsertRowid
+
+                };
+
+            }
+        )();
 
 
     // =====================================================
-    // AUDIT
+    // AUDIT — LAND ALLOCATION
     // =====================================================
 
     createAuditSafely({
@@ -649,7 +690,15 @@ async function allocateLand(
 
         details: {
 
+            allocationId:
+                transactionResult.allocationId,
+
             citizenId,
+
+            officerId,
+
+            regionId:
+                land.regionId,
 
             reason,
 
@@ -668,7 +717,200 @@ async function allocateLand(
 
 
     // =====================================================
-    // RETURN UPDATED LAND
+    // FINAL ALLOCATION DOCUMENT
+    // =====================================================
+
+    let document = null;
+
+
+    try {
+
+        document =
+            await createDocument({
+
+                documentType:
+                    "LAND_ALLOCATION_RECORD",
+
+                landId,
+
+                /*
+                 * For allocation, the blockchain
+                 * transaction hash is the primary
+                 * transaction reference.
+                 */
+
+                transactionId:
+                    blockchainResult.transactionHash,
+
+                citizenId,
+
+                officerId,
+
+                officerWallet:
+                    officer.walletAddress,
+
+                createdBy:
+                    officerId,
+
+                allocationId:
+                    transactionResult.allocationId,
+
+                allocationReason:
+                    reason,
+
+                allocationType:
+                    "GOVERNMENT_LAND_ALLOCATION",
+
+                /*
+                 * These are intentionally left
+                 * unspecified because our current
+                 * allocations table does not contain
+                 * legal tenure or consideration fields.
+                 */
+
+                allocationTenure:
+                    null,
+
+                considerationAmount:
+                    null,
+
+                effectiveDate:
+                    allocatedAt
+
+            });
+
+
+    } catch (documentError) {
+
+        /*
+         * IMPORTANT:
+         *
+         * The blockchain allocation and database
+         * update have already completed.
+         *
+         * We must NOT pretend the land allocation
+         * failed just because document generation
+         * failed afterward.
+         */
+
+        console.error(
+            "Allocation document generation failed:",
+            documentError.message
+        );
+
+        return {
+
+            allocation: {
+
+                allocationId:
+                    transactionResult.allocationId,
+
+                landId,
+
+                citizenId,
+
+                officerId,
+
+                regionId:
+                    land.regionId,
+
+                reason,
+
+                status:
+                    "COMPLETED",
+
+                blockchainReference:
+                    blockchainResult.transactionHash,
+
+                allocatedAt
+
+            },
+
+            land:
+                getLandById(
+                    landId
+                ),
+
+            document:
+                null,
+
+            documentError:
+                documentError.message
+
+        };
+
+    }
+
+
+    // =====================================================
+    // LINK DOCUMENT TO ALLOCATION HISTORY
+    // =====================================================
+
+    if (document) {
+
+        db.prepare(`
+            UPDATE land_events
+
+            SET document_id = ?
+
+            WHERE event_id = ?
+        `).run(
+
+            document.documentId,
+
+            transactionResult.eventId
+
+        );
+
+    }
+
+
+    // =====================================================
+    // FINAL AUDIT — DOCUMENT
+    // =====================================================
+
+    if (document) {
+
+        createAuditSafely({
+
+            entityType:
+                "LAND",
+
+            entityId:
+                landId,
+
+            action:
+                "LAND_ALLOCATION_DOCUMENT_CREATED",
+
+            performedBy:
+                officerId,
+
+            details: {
+
+                allocationId:
+                    transactionResult.allocationId,
+
+                documentId:
+                    document.documentId,
+
+                sha256Hash:
+                    document.sha256Hash,
+
+                ipfsCid:
+                    document.ipfsCid,
+
+                blockchainReference:
+                    document.blockchainReference
+
+            }
+
+        });
+
+    }
+
+
+    // =====================================================
+    // RETURN
     // =====================================================
 
     return {
@@ -676,7 +918,7 @@ async function allocateLand(
         allocation: {
 
             allocationId:
-                transaction,
+                transactionResult.allocationId,
 
             landId,
 
@@ -684,10 +926,13 @@ async function allocateLand(
 
             officerId,
 
+            regionId:
+                land.regionId,
+
             reason,
 
             status:
-                "ALLOCATED",
+                "COMPLETED",
 
             blockchainReference:
                 blockchainResult.transactionHash,
@@ -699,7 +944,9 @@ async function allocateLand(
         land:
             getLandById(
                 landId
-            )
+            ),
+
+        document
 
     };
 
@@ -723,17 +970,17 @@ function getAllocations() {
 
             officer_id AS officerId,
 
+            region_id AS regionId,
+
             reason,
 
-            blockchain_reference AS blockchainReference,
-
-            allocated_at AS allocatedAt,
+            status,
 
             created_at AS createdAt
 
         FROM allocations
 
-        ORDER BY allocated_at DESC
+        ORDER BY created_at DESC
 
     `).all();
 
@@ -768,11 +1015,11 @@ function getAllocationById(
 
             officer_id AS officerId,
 
+            region_id AS regionId,
+
             reason,
 
-            blockchain_reference AS blockchainReference,
-
-            allocated_at AS allocatedAt,
+            status,
 
             created_at AS createdAt
 

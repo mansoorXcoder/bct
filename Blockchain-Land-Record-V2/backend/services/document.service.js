@@ -199,16 +199,17 @@ function getRecentModifications(landId) {
 // FORMAT HELPERS
 // =========================================================
 
-function value(value) {
+function value(input) {
+
     if (
-        value === null ||
-        value === undefined ||
-        value === ""
+        input === null ||
+        input === undefined ||
+        input === ""
     ) {
         return "N/A";
     }
 
-    return String(value);
+    return String(input);
 }
 
 
@@ -425,7 +426,15 @@ function generatePdfFile(payload) {
                 officer,
 
                 transactionId,
-                preliminary
+                preliminary,
+
+                // Government allocation details
+                allocationId,
+                allocationReason,
+                allocationType,
+                allocationTenure,
+                considerationAmount,
+                effectiveDate
 
             } = payload;
 
@@ -457,7 +466,6 @@ function generatePdfFile(payload) {
                     filePath
                 );
 
-
             pdf.pipe(stream);
 
 
@@ -467,14 +475,11 @@ function generatePdfFile(payload) {
             const pageHeight =
                 pdf.page.height;
 
-
-            const margin =
-                36;
+            const margin = 36;
 
             const contentWidth =
                 pageWidth -
                 margin * 2;
-
 
             let y = 30;
 
@@ -498,7 +503,6 @@ function generatePdfFile(payload) {
                     }
                 );
 
-
             y += 20;
 
 
@@ -517,8 +521,29 @@ function generatePdfFile(payload) {
                     }
                 );
 
-
             y += 18;
+
+
+            // =================================================
+            // DOCUMENT TITLE
+            // =================================================
+
+            let documentTitle =
+                "REGISTERED SYSTEM RECORD";
+
+            if (preliminary) {
+
+                documentTitle =
+                    "PRELIMINARY TRANSACTION RECORD";
+
+            } else if (
+                documentType ===
+                "LAND_ALLOCATION_RECORD"
+            ) {
+
+                documentTitle =
+                    "FINAL LAND ALLOCATION RECORD";
+            }
 
 
             pdf
@@ -526,9 +551,7 @@ function generatePdfFile(payload) {
                 .fontSize(9.5)
                 .fillColor("#111111")
                 .text(
-                    preliminary
-                        ? "PRELIMINARY TRANSACTION RECORD"
-                        : "REGISTERED SYSTEM RECORD",
+                    documentTitle,
                     margin,
                     y,
                     {
@@ -537,7 +560,6 @@ function generatePdfFile(payload) {
                         lineBreak: false
                     }
                 );
-
 
             y += 20;
 
@@ -548,7 +570,6 @@ function generatePdfFile(payload) {
                 y,
                 contentWidth
             );
-
 
             y += 9;
 
@@ -577,7 +598,6 @@ function generatePdfFile(payload) {
                 contentWidth
             );
 
-
             y += 14;
 
 
@@ -592,8 +612,77 @@ function generatePdfFile(payload) {
                 contentWidth
             );
 
-
             y += 22;
+
+
+            // =================================================
+            // GOVERNMENT LAND ALLOCATION DETAILS
+            // =================================================
+
+            if (
+                documentType ===
+                "LAND_ALLOCATION_RECORD"
+            ) {
+
+                y = drawSectionTitle(
+                    pdf,
+                    "LAND ALLOCATION DETAILS",
+                    margin,
+                    y,
+                    contentWidth
+                );
+
+
+                drawTwoColumnField(
+                    pdf,
+                    "Allocation ID",
+                    allocationId,
+                    "Allocation Type",
+                    allocationType ||
+                        "Government Land Allocation",
+                    margin,
+                    y,
+                    contentWidth
+                );
+
+                y += 14;
+
+
+                drawTwoColumnField(
+                    pdf,
+                    "Allocation Reason",
+                    allocationReason,
+                    "Effective Date",
+                    effectiveDate
+                        ? formatDate(effectiveDate)
+                        : formatDate(new Date()),
+                    margin,
+                    y,
+                    contentWidth
+                );
+
+                y += 14;
+
+
+                drawTwoColumnField(
+                    pdf,
+                    "Tenure / Lease",
+                    allocationTenure
+                        ? `${allocationTenure} years`
+                        : "Not specified",
+                    "Consideration",
+                    considerationAmount !== null &&
+                    considerationAmount !== undefined &&
+                    considerationAmount !== ""
+                        ? `INR ${considerationAmount}`
+                        : "Not specified",
+                    margin,
+                    y,
+                    contentWidth
+                );
+
+                y += 22;
+            }
 
 
             // =================================================
@@ -620,7 +709,6 @@ function generatePdfFile(payload) {
                 contentWidth
             );
 
-
             y += 14;
 
 
@@ -634,7 +722,6 @@ function generatePdfFile(payload) {
                 y,
                 contentWidth
             );
-
 
             y += 14;
 
@@ -650,7 +737,6 @@ function generatePdfFile(payload) {
                 contentWidth
             );
 
-
             y += 14;
 
 
@@ -664,7 +750,6 @@ function generatePdfFile(payload) {
                 y,
                 contentWidth
             );
-
 
             y += 14;
 
@@ -680,7 +765,6 @@ function generatePdfFile(payload) {
                 contentWidth
             );
 
-
             y += 14;
 
 
@@ -692,7 +776,6 @@ function generatePdfFile(payload) {
                 y,
                 contentWidth
             );
-
 
             y += 22;
 
@@ -721,7 +804,6 @@ function generatePdfFile(payload) {
                 contentWidth
             );
 
-
             y += 14;
 
 
@@ -738,7 +820,6 @@ function generatePdfFile(payload) {
                 contentWidth
             );
 
-
             y += 14;
 
 
@@ -754,7 +835,6 @@ function generatePdfFile(payload) {
                 y,
                 contentWidth
             );
-
 
             y += 22;
 
@@ -787,7 +867,6 @@ function generatePdfFile(payload) {
                     contentWidth
                 );
 
-
                 y += 14;
 
 
@@ -802,13 +881,10 @@ function generatePdfFile(payload) {
                     contentWidth
                 );
 
-
                 y += 14;
 
 
-                if (
-                    proposedBuyer
-                ) {
+                if (proposedBuyer) {
 
                     drawTwoColumnField(
                         pdf,
@@ -835,7 +911,6 @@ function generatePdfFile(payload) {
                         y,
                         contentWidth
                     );
-
                 }
 
 
@@ -855,7 +930,6 @@ function generatePdfFile(payload) {
                     contentWidth
                 );
 
-
                 y += 14;
 
 
@@ -868,14 +942,12 @@ function generatePdfFile(payload) {
                     contentWidth
                 );
 
-
                 y += 22;
-
             }
 
 
             // =================================================
-            // PREVIOUS OWNERS / HISTORY
+            // LAND HISTORY
             // =================================================
 
             y = drawSectionTitle(
@@ -905,11 +977,13 @@ function generatePdfFile(payload) {
                 contentWidth
             );
 
-
             y += 16;
 
 
-            // Recent event — keep it compact for one page.
+            // =================================================
+            // RECENT EVENT
+            // =================================================
+
             if (
                 recentModifications.length > 0
             ) {
@@ -927,13 +1001,10 @@ function generatePdfFile(payload) {
                     contentWidth
                 );
 
-
                 y += 14;
 
 
-                if (
-                    event.reason
-                ) {
+                if (event.reason) {
 
                     drawField(
                         pdf,
@@ -944,9 +1015,7 @@ function generatePdfFile(payload) {
                         contentWidth
                     );
 
-
                     y += 14;
-
                 }
 
             } else {
@@ -960,9 +1029,7 @@ function generatePdfFile(payload) {
                     contentWidth
                 );
 
-
                 y += 14;
-
             }
 
 
@@ -995,7 +1062,6 @@ function generatePdfFile(payload) {
                     contentWidth
                 );
 
-
                 y += 14;
 
 
@@ -1013,12 +1079,14 @@ function generatePdfFile(payload) {
                                     request.validationResult
                                 )
                         )
-                        : "N/A",
+                        : documentType ===
+                          "LAND_ALLOCATION_RECORD"
+                            ? "ALLOCATION COMPLETED"
+                            : "N/A",
                     margin,
                     y,
                     contentWidth
                 );
-
 
                 y += 14;
 
@@ -1034,9 +1102,80 @@ function generatePdfFile(payload) {
                     contentWidth
                 );
 
-
                 y += 22;
+            }
 
+
+            // =================================================
+            // ALLOCATION NOTICE
+            // =================================================
+
+            if (
+                documentType ===
+                "LAND_ALLOCATION_RECORD"
+            ) {
+
+                pdf
+                    .save()
+                    .rect(
+                        margin,
+                        y,
+                        contentWidth,
+                        48
+                    )
+                    .fill("#f2f2f2")
+                    .restore();
+
+
+                pdf
+                    .font("Helvetica-Bold")
+                    .fontSize(8.5)
+                    .fillColor("#111111")
+                    .text(
+                        "GOVERNMENT LAND ALLOCATION RECORD",
+                        margin + 8,
+                        y + 7,
+                        {
+                            width:
+                                contentWidth - 16,
+                            lineBreak: false
+                        }
+                    );
+
+
+                pdf
+                    .font("Helvetica")
+                    .fontSize(7.4)
+                    .fillColor("#222222")
+                    .text(
+                        "This system record confirms that the land allocation was processed through the authorized workflow of the prototype system.",
+                        margin + 8,
+                        y + 21,
+                        {
+                            width:
+                                contentWidth - 16,
+                            height: 12,
+                            lineBreak: false
+                        }
+                    );
+
+
+                pdf
+                    .fontSize(7.4)
+                    .text(
+                        "It is a system-generated administrative record and does not represent a legally valid government deed, title, lease, or statutory allocation order.",
+                        margin + 8,
+                        y + 33,
+                        {
+                            width:
+                                contentWidth - 16,
+                            height: 12,
+                            lineBreak: false
+                        }
+                    );
+
+
+                y += 57;
             }
 
 
@@ -1107,7 +1246,6 @@ function generatePdfFile(payload) {
 
 
                 y += 57;
-
             }
 
 
@@ -1122,7 +1260,6 @@ function generatePdfFile(payload) {
                 y,
                 contentWidth
             );
-
 
             y += 23;
 
@@ -1189,7 +1326,6 @@ function generatePdfFile(payload) {
 
         }
     );
-
 }
 
 
@@ -1288,12 +1424,18 @@ async function createPreliminaryDocument(
 
 
     if (!land) {
+
         fail(
             "Land record not found.",
             404
         );
+
     }
 
+
+    // =====================================================
+    // GET REQUEST
+    // =====================================================
 
     const request =
         db.prepare(`
@@ -1358,9 +1500,7 @@ async function createPreliminaryDocument(
 
 
     // =====================================================
-    // IMPORTANT:
-    // CURRENT OWNER MUST REMAIN CURRENT OWNER.
-    // BUYER IS ONLY THE PROPOSED NEW OWNER.
+    // CURRENT OWNER
     // =====================================================
 
     const currentOwner =
@@ -1369,6 +1509,10 @@ async function createPreliminaryDocument(
         );
 
 
+    // =====================================================
+    // SELLER
+    // =====================================================
+
     const seller =
         resolveIdentity(
             sellerId ||
@@ -1376,12 +1520,20 @@ async function createPreliminaryDocument(
         );
 
 
+    // =====================================================
+    // BUYER
+    // =====================================================
+
     const buyer =
         resolveIdentity(
             buyerId ||
             request.buyerId
         );
 
+
+    // =====================================================
+    // OFFICER
+    // =====================================================
 
     const officer =
         resolveIdentity(
@@ -1392,6 +1544,10 @@ async function createPreliminaryDocument(
     const documentId =
         generateDocumentId();
 
+
+    // =====================================================
+    // GENERATE PDF
+    // =====================================================
 
     const filePath =
         await generatePdfFile({
@@ -1437,6 +1593,10 @@ async function createPreliminaryDocument(
     const createdAt =
         new Date().toISOString();
 
+
+    // =====================================================
+    // SAVE PRELIMINARY DOCUMENT
+    // =====================================================
 
     db.prepare(`
         INSERT INTO documents (
@@ -1487,6 +1647,10 @@ async function createPreliminaryDocument(
     );
 
 
+    // =====================================================
+    // LINK PRELIMINARY DOCUMENT TO REQUEST
+    // =====================================================
+
     db.prepare(`
         UPDATE land_requests
 
@@ -1506,6 +1670,10 @@ async function createPreliminaryDocument(
 
     );
 
+
+    // =====================================================
+    // AUDIT
+    // =====================================================
 
     createAuditSafely({
 
@@ -1544,7 +1712,6 @@ async function createPreliminaryDocument(
             "PRELIMINARY"
 
     };
-
 }
 
 
@@ -1574,10 +1741,30 @@ async function createDocument(
 
         officerWallet = null,
 
-        createdBy = null
+        createdBy = null,
+
+        // =================================================
+        // GOVERNMENT ALLOCATION FIELDS
+        // =================================================
+
+        allocationId = null,
+
+        allocationReason = null,
+
+        allocationType = null,
+
+        allocationTenure = null,
+
+        considerationAmount = null,
+
+        effectiveDate = null
 
     } = payload;
 
+
+    // =====================================================
+    // VALIDATION
+    // =====================================================
 
     if (!documentType) {
         fail("Document type is required.");
@@ -1593,6 +1780,10 @@ async function createDocument(
         fail("Officer wallet is required.");
     }
 
+
+    // =====================================================
+    // LAND
+    // =====================================================
 
     const land =
         getLandById(
@@ -1610,6 +1801,10 @@ async function createDocument(
     }
 
 
+    // =====================================================
+    // CURRENT OWNER
+    // =====================================================
+
     const currentOwner =
         resolveIdentity(
             citizenId ||
@@ -1617,17 +1812,29 @@ async function createDocument(
         );
 
 
+    // =====================================================
+    // SELLER
+    // =====================================================
+
     const seller =
         resolveIdentity(
             sellerId
         );
 
 
+    // =====================================================
+    // OFFICER
+    // =====================================================
+
     const officer =
         resolveIdentity(
             officerId
         );
 
+
+    // =====================================================
+    // REQUEST
+    // =====================================================
 
     let request = null;
 
@@ -1695,7 +1902,6 @@ async function createDocument(
             );
 
         }
-
     }
 
 
@@ -1711,9 +1917,17 @@ async function createDocument(
             : null;
 
 
+    // =====================================================
+    // DOCUMENT ID
+    // =====================================================
+
     const documentId =
         generateDocumentId();
 
+
+    // =====================================================
+    // GENERATE PDF
+    // =====================================================
 
     const filePath =
         await generatePdfFile({
@@ -1751,16 +1965,32 @@ async function createDocument(
                 transactionId ||
                 requestId,
 
-            preliminary: false
+            preliminary: false,
+
+            // Government allocation information
+            allocationId,
+            allocationReason,
+            allocationType,
+            allocationTenure,
+            considerationAmount,
+            effectiveDate
 
         });
 
+
+    // =====================================================
+    // SHA-256
+    // =====================================================
 
     const sha256Hash =
         calculateSha256(
             filePath
         );
 
+
+    // =====================================================
+    // IPFS
+    // =====================================================
 
     const ipfsResult =
         await uploadFileToIPFS(
@@ -1780,6 +2010,10 @@ async function createDocument(
 
     }
 
+
+    // =====================================================
+    // BLOCKCHAIN DOCUMENT ANCHOR
+    // =====================================================
 
     const blockchainResult =
         await anchorDocument(
@@ -1802,6 +2036,10 @@ async function createDocument(
 
         );
 
+
+    // =====================================================
+    // DATABASE INSERT
+    // =====================================================
 
     const createdAt =
         new Date().toISOString();
@@ -1862,6 +2100,10 @@ async function createDocument(
     );
 
 
+    // =====================================================
+    // LINK DOCUMENT TO LAND EVENT
+    // =====================================================
+
     if (requestId) {
 
         db.prepare(`
@@ -1874,12 +2116,61 @@ async function createDocument(
         `).run(
 
             documentId,
+
             requestId
+
+        );
+
+    } else if (
+        documentType ===
+        "LAND_ALLOCATION_RECORD"
+    ) {
+
+        /*
+         * Government allocation does not use
+         * a land request.
+         *
+         * Therefore link the final allocation
+         * document directly to the latest
+         * LAND_ALLOCATION event for this land.
+         */
+
+        db.prepare(`
+            UPDATE land_events
+
+            SET document_id = ?
+
+            WHERE event_id = (
+
+                SELECT event_id
+
+                FROM land_events
+
+                WHERE land_id = ?
+
+                  AND event_type =
+                      'LAND_ALLOCATION'
+
+                  AND document_id IS NULL
+
+                ORDER BY event_id DESC
+
+                LIMIT 1
+            )
+        `).run(
+
+            documentId,
+
+            landId
 
         );
 
     }
 
+
+    // =====================================================
+    // AUDIT
+    // =====================================================
 
     createAuditSafely({
 
@@ -1898,8 +2189,16 @@ async function createDocument(
         details: {
 
             landId,
+
             requestId,
+
             documentType,
+
+            allocationId,
+
+            allocationReason,
+
+            allocationType,
 
             sha256Hash,
 
@@ -1913,6 +2212,10 @@ async function createDocument(
 
     });
 
+
+    // =====================================================
+    // RETURN
+    // =====================================================
 
     return {
 
@@ -1928,6 +2231,19 @@ async function createDocument(
 
         documentType,
 
+        // Allocation information
+        allocationId,
+
+        allocationReason,
+
+        allocationType,
+
+        allocationTenure,
+
+        considerationAmount,
+
+        effectiveDate,
+
         filePath,
 
         sha256Hash,
@@ -1939,7 +2255,6 @@ async function createDocument(
             blockchainResult.transactionHash
 
     };
-
 }
 
 
@@ -2086,7 +2401,6 @@ function createAuditSafely(
         );
 
     }
-
 }
 
 

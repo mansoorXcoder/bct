@@ -1,38 +1,97 @@
-const express = require("express");
+const express =
+    require("express");
 
-const router = express.Router();
+const router =
+    express.Router();
 
 const {
-    createTransferProposal,
+
+    proposeTransfer,
+
     getTransferById,
-    getAllTransfers,
+
+    getTransfers,
+
     acceptTransfer,
-    approveTransfer
-} = require("../controllers/transfer.controller");
+
+    reviewTransfer,
+
+    approveTransfer,
+
+    rejectTransfer
+
+} =
+    require("../controllers/transfer.controller");
+
+
+// =========================================================
+// CREATE TRANSFER
+// =========================================================
 
 router.post(
     "/",
-    createTransferProposal
+    proposeTransfer
 );
+
+
+// =========================================================
+// GET ALL TRANSFERS
+// =========================================================
 
 router.get(
     "/",
-    getAllTransfers
+    getTransfers
 );
+
+
+// =========================================================
+// BUYER ACCEPTANCE
+// =========================================================
 
 router.post(
     "/accept",
     acceptTransfer
 );
 
+
+// =========================================================
+// OFFICER VALIDATION
+// =========================================================
+
+router.post(
+    "/review",
+    reviewTransfer
+);
+
+
+// =========================================================
+// OFFICER APPROVAL
+// =========================================================
+
 router.post(
     "/approve",
     approveTransfer
 );
 
+
+// =========================================================
+// OFFICER REJECTION
+// =========================================================
+
+router.post(
+    "/reject",
+    rejectTransfer
+);
+
+
+// =========================================================
+// SINGLE TRANSFER
+// =========================================================
+
 router.get(
     "/:transferId",
     getTransferById
 );
+
 
 module.exports = router;

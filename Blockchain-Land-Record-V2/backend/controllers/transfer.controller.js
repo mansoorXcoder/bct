@@ -1,21 +1,43 @@
-const transferService =
-    require("../services/transfer.service");
+const requestService =
+    require("../services/landTransaction.service");
 
 
-function createTransferProposal(req, res) {
+// =========================================================
+// CREATE OWNERSHIP TRANSFER
+// =========================================================
+
+async function proposeTransfer(req, res) {
 
     try {
 
-        const transfer =
-            transferService.createTransferProposal(
-                req.body
+        const body = {
+            ...req.body,
+
+            requestType:
+                "OWNERSHIP_TRANSFER",
+
+            requesterId:
+                req.body.sellerId,
+
+            sellerId:
+                req.body.sellerId
+        };
+
+        const result =
+            await requestService.createRequest(
+                body
             );
 
-        res.status(201).json({
+        return res.status(201).json({
+
             status: "success",
+
             message:
-                "Transfer proposal created successfully",
-            transfer
+                "Transfer request created successfully.",
+
+            data:
+                result
+
         });
 
     } catch (error) {
@@ -25,44 +47,55 @@ function createTransferProposal(req, res) {
             error.message
         );
 
-        res.status(
+        return res.status(
             error.statusCode || 500
         ).json({
+
             status: "error",
+
             message:
                 error.message
+
         });
+
     }
+
 }
 
+
+// =========================================================
+// GET TRANSFER / REQUEST
+// =========================================================
 
 function getTransferById(req, res) {
 
     try {
 
-        const {
-            transferId
-        } = req.params;
-
-        const transfer =
-            transferService.getTransferById(
-                transferId
+        const result =
+            requestService.getRequestById(
+                req.params.transferId
             );
 
-
-        if (!transfer) {
+        if (!result) {
 
             return res.status(404).json({
-                status: "not_found",
+
+                status: "error",
+
                 message:
-                    "Transfer proposal not found"
+                    "Transfer request not found."
+
             });
+
         }
 
+        return res.json({
 
-        res.json({
             status: "success",
-            transfer
+
+            data:
+                result
+
         });
 
     } catch (error) {
@@ -72,28 +105,48 @@ function getTransferById(req, res) {
             error.message
         );
 
-        res.status(500).json({
+        return res.status(
+            error.statusCode || 500
+        ).json({
+
             status: "error",
+
             message:
-                "Failed to retrieve transfer proposal"
+                error.message
+
         });
+
     }
+
 }
 
 
-function getAllTransfers(req, res) {
+// =========================================================
+// GET ALL TRANSFERS
+// =========================================================
+
+function getTransfers(req, res) {
 
     try {
 
-        const transfers =
-            transferService.getAllTransfers();
+        const requests =
+            requestService.getRequests({
 
+                requestType:
+                    "OWNERSHIP_TRANSFER"
 
-        res.json({
+            });
+
+        return res.json({
+
             status: "success",
+
             count:
-                transfers.length,
-            transfers
+                requests.length,
+
+            data:
+                requests
+
         });
 
     } catch (error) {
@@ -103,30 +156,45 @@ function getAllTransfers(req, res) {
             error.message
         );
 
-        res.status(500).json({
+        return res.status(
+            error.statusCode || 500
+        ).json({
+
             status: "error",
+
             message:
-                "Failed to retrieve transfers"
+                error.message
+
         });
+
     }
+
 }
 
 
-function acceptTransfer(req, res) {
+// =========================================================
+// BUYER ACCEPTANCE
+// =========================================================
+
+async function acceptTransfer(req, res) {
 
     try {
 
-        const transfer =
-            transferService.acceptTransfer(
+        const result =
+            await requestService.acceptRequest(
                 req.body
             );
 
+        return res.json({
 
-        res.json({
             status: "success",
+
             message:
-                "Transfer accepted by buyer",
-            transfer
+                "Transfer accepted by buyer.",
+
+            data:
+                result
+
         });
 
     } catch (error) {
@@ -136,32 +204,93 @@ function acceptTransfer(req, res) {
             error.message
         );
 
-        res.status(
+        return res.status(
             error.statusCode || 500
         ).json({
+
             status: "error",
+
             message:
                 error.message
+
         });
+
     }
+
 }
 
 
-function approveTransfer(req, res) {
+// =========================================================
+// OFFICER VALIDATION
+// =========================================================
+
+async function reviewTransfer(req, res) {
 
     try {
 
-        const transfer =
-            transferService.approveTransfer(
+        const result =
+            await requestService.reviewRequest(
                 req.body
             );
 
+        return res.json({
 
-        res.json({
             status: "success",
+
             message:
-                "Transfer approved and ownership updated",
-            transfer
+                "Transfer request validated successfully.",
+
+            data:
+                result
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Review transfer error:",
+            error.message
+        );
+
+        return res.status(
+            error.statusCode || 500
+        ).json({
+
+            status: "error",
+
+            message:
+                error.message
+
+        });
+
+    }
+
+}
+
+
+// =========================================================
+// OFFICER APPROVAL
+// =========================================================
+
+async function approveTransfer(req, res) {
+
+    try {
+
+        const result =
+            await requestService.approveRequest(
+                req.body
+            );
+
+        return res.json({
+
+            status: "success",
+
+            message:
+                "Transfer approved and registered successfully.",
+
+            data:
+                result
+
         });
 
     } catch (error) {
@@ -171,26 +300,88 @@ function approveTransfer(req, res) {
             error.message
         );
 
-        res.status(
+        return res.status(
             error.statusCode || 500
         ).json({
+
             status: "error",
+
             message:
                 error.message
+
         });
+
     }
+
 }
 
 
+// =========================================================
+// OFFICER REJECTION
+// =========================================================
+
+async function rejectTransfer(req, res) {
+
+    try {
+
+        const result =
+            await requestService.rejectRequest(
+                req.body
+            );
+
+        return res.json({
+
+            status: "success",
+
+            message:
+                "Transfer request rejected.",
+
+            data:
+                result
+
+        });
+
+    } catch (error) {
+
+        console.error(
+            "Reject transfer error:",
+            error.message
+        );
+
+        return res.status(
+            error.statusCode || 500
+        ).json({
+
+            status: "error",
+
+            message:
+                error.message
+
+        });
+
+    }
+
+}
+
+
+// =========================================================
+// EXPORTS
+// =========================================================
+
 module.exports = {
 
-    createTransferProposal,
+    proposeTransfer,
 
     getTransferById,
 
-    getAllTransfers,
+    getTransfers,
 
     acceptTransfer,
 
-    approveTransfer
+    reviewTransfer,
+
+    approveTransfer,
+
+    rejectTransfer
+
 };

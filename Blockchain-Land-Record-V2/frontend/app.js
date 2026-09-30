@@ -12,14 +12,19 @@ let citizens = [];
 let currentRequests = [];
 let currentLands = [];
 
+
 /* =========================================================
    BASIC HELPERS
    ========================================================= */
 
 const $ = (id) => document.getElementById(id);
 
+
 function escapeHtml(value) {
-    if (value === null || value === undefined) return "-";
+
+    if (value === null || value === undefined) {
+        return "-";
+    }
 
     return String(value)
         .replaceAll("&", "&amp;")
@@ -29,8 +34,12 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
+
 function formatDate(value) {
-    if (!value) return "-";
+
+    if (!value) {
+        return "-";
+    }
 
     try {
         return new Date(value).toLocaleString();
@@ -39,29 +48,242 @@ function formatDate(value) {
     }
 }
 
+
 function hide(id) {
+
     $(id)?.classList.add("hidden");
 }
 
+
 function show(id) {
+
     $(id)?.classList.remove("hidden");
 }
+
 
 function roleLabel(role) {
 
     const labels = {
-        PUBLIC: "Public",
-        CITIZEN: "Citizen",
-        LAND_ADMIN_OFFICER: "Land Administration Officer",
-        SUPERVISORY_AUTHORITY: "Supervisory Authority"
+
+        PUBLIC:
+            "Public",
+
+        CITIZEN:
+            "Citizen",
+
+        LAND_ADMIN_OFFICER:
+            "Land Administration Officer",
+
+        SUPERVISORY_AUTHORITY:
+            "Supervisory Authority"
     };
 
     return labels[role] || role || "Public";
 }
 
+/* =========================================================
+   ROLE-BASED NAVIGATION
+   ========================================================= */
+
+function configureNavigation() {
+
+    const navigation =
+        $("mainNavigation");
+
+    if (!navigation) {
+        return;
+    }
+
+
+    const buttons =
+        navigation.querySelectorAll(
+            ".nav-btn"
+        );
+
+
+    /* -----------------------------------------
+       PUBLIC
+       ----------------------------------------- */
+
+    if (!identity) {
+
+        navigation.classList.add(
+            "hidden"
+        );
+
+        return;
+    }
+
+
+    navigation.classList.remove(
+        "hidden"
+    );
+
+
+    let labels = {};
+
+
+    /* -----------------------------------------
+       CITIZEN
+       ----------------------------------------- */
+
+    if (
+        identity.role ===
+        "CITIZEN"
+    ) {
+
+        labels = {
+
+            dashboard:
+                "Dashboard",
+
+            lands:
+                "My Land",
+
+            requests:
+                "My Requests",
+
+            documents:
+                "My Documents",
+
+            history:
+                "Land History",
+
+            audit:
+                null
+        };
+    }
+
+
+    /* -----------------------------------------
+       LAND ADMINISTRATION OFFICER
+       ----------------------------------------- */
+
+    else if (
+        identity.role ===
+        "LAND_ADMIN_OFFICER"
+    ) {
+
+        labels = {
+
+            dashboard:
+                "Dashboard",
+
+            lands:
+                "Regional Registry",
+
+            requests:
+                "Review Requests",
+
+            documents:
+                "Registry Documents",
+
+            history:
+                "Regional History",
+
+            audit:
+                "Regional Audit"
+        };
+    }
+
+
+    /* -----------------------------------------
+       SUPERVISORY AUTHORITY
+       ----------------------------------------- */
+
+    else if (
+        identity.role ===
+        "SUPERVISORY_AUTHORITY"
+    ) {
+
+        labels = {
+
+            dashboard:
+                "Dashboard",
+
+            lands:
+                "Land Registry",
+
+            requests:
+                "Transactions",
+
+            documents:
+                "Documents",
+
+            history:
+                "Land History",
+
+            audit:
+                "System Audit"
+        };
+    }
+
+
+    buttons.forEach(
+        button => {
+
+            const page =
+                button.dataset.page;
+
+            const label =
+                labels[page];
+
+
+            if (
+                label === null ||
+                label === undefined
+            ) {
+
+                button.classList.add(
+                    "hidden"
+                );
+
+                return;
+            }
+
+
+            button.classList.remove(
+                "hidden"
+            );
+
+
+            button.textContent =
+                label;
+        }
+    );
+}
+/* =========================================================
+   REGION LABEL
+   ========================================================= */
+
+function regionLabel(regionId) {
+
+    const regions = {
+
+        "REGION-01":
+            "Riverland Zone",
+
+        "REGION-02":
+            "Greenfield Zone"
+    };
+
+    return (
+        regions[regionId] ||
+        regionId ||
+        "-"
+    );
+}
+
+
+/* =========================================================
+   RESPONSE HELPERS
+   ========================================================= */
+
 function extractData(result) {
 
-    if (!result) return null;
+    if (!result) {
+        return null;
+    }
 
     if (result.data !== undefined) {
         return result.data;
@@ -73,6 +295,7 @@ function extractData(result) {
 
     return result;
 }
+
 
 function extractArray(result) {
 
@@ -114,23 +337,36 @@ function extractArray(result) {
 
 function notify(message, type = "info") {
 
-    const notification = $("notification");
+    const notification =
+        $("notification");
 
-    if (!notification) return;
+    if (!notification) {
+        return;
+    }
 
-    notification.textContent = message;
+    notification.textContent =
+        message;
 
     notification.className =
         `notification ${type}`;
 
-    notification.classList.remove("hidden");
+    notification.classList.remove(
+        "hidden"
+    );
 
-    clearTimeout(window.notificationTimer);
+    clearTimeout(
+        window.notificationTimer
+    );
 
     window.notificationTimer =
-        setTimeout(() => {
-            notification.classList.add("hidden");
-        }, 5000);
+        setTimeout(
+            () => {
+                notification.classList.add(
+                    "hidden"
+                );
+            },
+            5000
+        );
 }
 
 
@@ -138,33 +374,45 @@ function notify(message, type = "info") {
    API
    ========================================================= */
 
-async function api(path, options = {}) {
+async function api(
+    path,
+    options = {}
+) {
 
-    const response = await fetch(
-        `${API_BASE}${path}`,
-        {
-            ...options,
+    const response =
+        await fetch(
+            `${API_BASE}${path}`,
+            {
+                ...options,
 
-            headers: {
-                "Content-Type": "application/json",
-                ...(options.headers || {})
+                headers: {
+                    "Content-Type":
+                        "application/json",
+
+                    ...(options.headers || {})
+                }
             }
-        }
-    );
+        );
 
-    const text = await response.text();
+    const text =
+        await response.text();
 
     let result = {};
 
     try {
-        result = text
-            ? JSON.parse(text)
-            : {};
+
+        result =
+            text
+                ? JSON.parse(text)
+                : {};
+
     } catch {
+
         result = {
             message: text
         };
     }
+
 
     if (!response.ok) {
 
@@ -175,7 +423,8 @@ async function api(path, options = {}) {
                 `Request failed (${response.status})`
             );
 
-        error.status = response.status;
+        error.status =
+            response.status;
 
         throw error;
     }
@@ -200,31 +449,43 @@ async function connectWallet() {
         return;
     }
 
+
     try {
 
         const accounts =
             await window.ethereum.request({
-                method: "eth_requestAccounts"
+                method:
+                    "eth_requestAccounts"
             });
 
-        if (!accounts || !accounts.length) {
+
+        if (
+            !accounts ||
+            !accounts.length
+        ) {
+
             throw new Error(
                 "No MetaMask account was selected."
             );
         }
 
+
         walletAddress =
             accounts[0].toLowerCase();
+
 
         sessionStorage.setItem(
             "lr_wallet",
             walletAddress
         );
 
+
         const registered =
             await loadIdentity();
 
+
         await loadBlockchain();
+
 
         if (!registered) {
 
@@ -233,17 +494,23 @@ async function connectWallet() {
                 "error"
             );
 
+            updateSessionUI();
+
             return;
         }
 
+
         updateSessionUI();
 
+
         await initializeApplication();
+
 
         notify(
             `Connected as ${identity.name}.`,
             "success"
         );
+
 
     } catch (error) {
 
@@ -267,13 +534,17 @@ async function connectWallet() {
 async function loadIdentity() {
 
     if (!walletAddress) {
+
         identity = null;
+
         return false;
     }
+
 
     try {
 
         let result;
+
 
         try {
 
@@ -290,10 +561,13 @@ async function loadIdentity() {
                 );
         }
 
+
         identity =
             extractData(result);
 
+
         return !!identity;
+
 
     } catch (error) {
 
@@ -318,10 +592,14 @@ async function loadBlockchain() {
     try {
 
         const result =
-            await api("/blockchain/status");
+            await api(
+                "/blockchain/status"
+            );
+
 
         blockchainStatus =
             extractData(result);
+
 
         if ($("networkBadge")) {
 
@@ -334,9 +612,11 @@ async function loadBlockchain() {
 
         return true;
 
+
     } catch (error) {
 
         blockchainStatus = null;
+
 
         if ($("networkBadge")) {
 
@@ -361,17 +641,20 @@ function updateSessionUI() {
     const loggedIn =
         !!identity;
 
+
     $("connectWalletBtn")
         ?.classList.toggle(
             "hidden",
             loggedIn
         );
 
+
     $("logoutWalletBtn")
         ?.classList.toggle(
             "hidden",
             !loggedIn
         );
+
 
     if ($("sessionLabel")) {
 
@@ -381,11 +664,14 @@ function updateSessionUI() {
                 : "Public";
     }
 
+
     $("mainNavigation")
         ?.classList.toggle(
             "hidden",
             !loggedIn
         );
+
+    configureNavigation();
 
     $("publicHero")
         ?.classList.toggle(
@@ -402,21 +688,29 @@ function updateSessionUI() {
 function logoutApplication() {
 
     walletAddress = null;
+
     identity = null;
+
     blockchainStatus = null;
 
     currentRequests = [];
+
     currentLands = [];
+
 
     sessionStorage.removeItem(
         "lr_wallet"
     );
 
+
     updateSessionUI();
+
 
     renderPublicDashboard();
 
+
     showPage("dashboard");
+
 
     notify(
         "Application session logged out.",
@@ -438,16 +732,25 @@ async function initializeApplication() {
         return;
     }
 
+
     configureRoleActions();
+
 
     configureRequestForm();
 
+
     await Promise.allSettled([
+
         loadDashboard(),
+
         loadRequests(),
+
         loadDocuments(),
+
         loadAudit()
+
     ]);
+
 
     showPage("dashboard");
 }
@@ -459,54 +762,129 @@ async function initializeApplication() {
 
 function showPage(page) {
 
+    /*
+     * Public users are allowed to use only
+     * the public dashboard and land search.
+     */
+
+    if (
+        !identity &&
+        page !== "dashboard" &&
+        page !== "lands"
+    ) {
+
+        page = "dashboard";
+    }
+
+
     document
         .querySelectorAll(".page")
-        .forEach(section => {
-            section.classList.add("hidden");
-        });
+        .forEach(
+            section => {
+                section.classList.add(
+                    "hidden"
+                );
+            }
+        );
+
 
     const target =
         $(`page-${page}`);
 
+
     if (target) {
-        target.classList.remove("hidden");
+
+        target.classList.remove(
+            "hidden"
+        );
     }
+
 
     document
         .querySelectorAll(".nav-btn")
-        .forEach(button => {
+        .forEach(
+            button => {
 
-            button.classList.toggle(
-                "active",
-                button.dataset.page === page
-            );
-        });
+                button.classList.toggle(
+                    "active",
+                    button.dataset.page === page
+                );
+            }
+        );
+
 
     switch (page) {
 
         case "dashboard":
+
             loadDashboard();
+
             break;
+
 
         case "lands":
+
             loadAllLands();
+
             break;
+
 
         case "requests":
+
+            if (!identity) {
+                break;
+            }
+
             configureRequestForm();
+
             loadRequests();
+
             break;
+
 
         case "documents":
+
+            if (!identity) {
+                break;
+            }
+
             loadDocuments();
+
             break;
+
 
         case "history":
+
+            if (!identity) {
+                break;
+            }
+
             break;
 
+
         case "audit":
-            loadAudit();
-            break;
+
+            if (
+        !identity ||
+        (
+            identity.role !==
+                "LAND_ADMIN_OFFICER" &&
+            identity.role !==
+                "SUPERVISORY_AUTHORITY"
+        )
+    ) {
+
+        showPage(
+            "dashboard"
+        );
+
+        return;
+    }
+
+
+    loadAudit();
+
+    break;
     }
 }
 
@@ -520,26 +898,52 @@ function renderPublicDashboard() {
     $("dashboardTitle").textContent =
         "Public Land Search";
 
+
     $("dashboardSubtitle").textContent =
         "Search publicly permitted land information.";
+
 
     $("statsGrid").innerHTML = `
 
         <div class="stat">
-            <span>Access</span>
-            <strong>Public</strong>
-            <small>Limited registry view</small>
+
+            <span>
+                Access
+            </span>
+
+            <strong>
+                Public
+            </strong>
+
+            <small>
+                Limited registry view
+            </small>
+
         </div>
 
+
         <div class="stat">
-            <span>Blockchain</span>
+
+            <span>
+                Blockchain
+            </span>
+
             <strong>
-                ${blockchainStatus ? "Online" : "Offline"}
+                ${
+                    blockchainStatus
+                        ? "Online"
+                        : "Offline"
+                }
             </strong>
-            <small>Live network status</small>
+
+            <small>
+                Live network status
+            </small>
+
         </div>
 
     `;
+
 
     $("roleDashboard").innerHTML = `
 
@@ -559,12 +963,14 @@ function renderPublicDashboard() {
 
                     <p>
                         Search by Land ID or Survey Number.
-                        Only permitted public information is displayed.
+                        Only permitted public information
+                        is displayed.
                     </p>
 
                 </div>
 
             </div>
+
 
             <button
                 class="btn primary"
@@ -574,6 +980,7 @@ function renderPublicDashboard() {
             </button>
 
         </div>
+
     `;
 }
 
@@ -591,22 +998,31 @@ async function loadDashboard() {
         return;
     }
 
+
     try {
 
         const landResult =
             await api("/lands");
 
+
         let lands =
-            extractArray(landResult);
+            extractArray(
+                landResult
+            );
+
 
         const requestResult =
             await api("/requests");
 
+
         let requests =
-            extractArray(requestResult);
+            extractArray(
+                requestResult
+            );
+
 
         /* -----------------------------------------
-           ROLE-BASED VISIBILITY
+           CITIZEN
            ----------------------------------------- */
 
         if (
@@ -621,14 +1037,25 @@ async function loadDashboard() {
                         identity.userId
                 );
 
+
             requests =
                 requests.filter(
                     request =>
-                        request.requesterId === identity.userId ||
-                        request.sellerId === identity.userId ||
-                        request.buyerId === identity.userId
+                        request.requesterId ===
+                            identity.userId ||
+
+                        request.sellerId ===
+                            identity.userId ||
+
+                        request.buyerId ===
+                            identity.userId
                 );
         }
+
+
+        /* -----------------------------------------
+           LAND OFFICER
+           ----------------------------------------- */
 
         else if (
             identity.role ===
@@ -643,18 +1070,26 @@ async function loadDashboard() {
                 );
         }
 
-        currentLands = lands;
-        currentRequests = requests;
+
+        currentLands =
+            lands;
+
+
+        currentRequests =
+            requests;
+
 
         renderDashboardStats(
             lands,
             requests
         );
 
+
         renderRoleDashboard(
             lands,
             requests
         );
+
 
     } catch (error) {
 
@@ -683,9 +1118,13 @@ function renderDashboardStats(
     const pending =
         requests.filter(
             request =>
-                request.status !== "COMPLETED" &&
-                request.status !== "REJECTED"
+                request.status !==
+                    "COMPLETED" &&
+
+                request.status !==
+                    "REJECTED"
         ).length;
+
 
     const completed =
         requests.filter(
@@ -694,11 +1133,14 @@ function renderDashboardStats(
                 "COMPLETED"
         ).length;
 
+
     $("statsGrid").innerHTML = `
 
         <div class="stat">
 
-            <span>Land Records</span>
+            <span>
+                Land Records
+            </span>
 
             <strong>
                 ${lands.length}
@@ -717,7 +1159,9 @@ function renderDashboardStats(
 
         <div class="stat">
 
-            <span>Pending Requests</span>
+            <span>
+                Pending Requests
+            </span>
 
             <strong>
                 ${pending}
@@ -732,7 +1176,9 @@ function renderDashboardStats(
 
         <div class="stat">
 
-            <span>Completed</span>
+            <span>
+                Completed
+            </span>
 
             <strong>
                 ${completed}
@@ -747,10 +1193,16 @@ function renderDashboardStats(
 
         <div class="stat">
 
-            <span>Blockchain</span>
+            <span>
+                Blockchain
+            </span>
 
             <strong>
-                ${blockchainStatus ? "Online" : "Offline"}
+                ${
+                    blockchainStatus
+                        ? "Online"
+                        : "Offline"
+                }
             </strong>
 
             <small>
@@ -774,7 +1226,10 @@ function renderRoleDashboard(
 
     let cards = [];
 
-    /* CITIZEN */
+
+    /* -----------------------------------------
+       CITIZEN
+       ----------------------------------------- */
 
     if (
         identity.role ===
@@ -784,28 +1239,45 @@ function renderRoleDashboard(
         cards = [
 
             {
-                title: "My Land",
-                value: `${lands.length} record(s)`,
+                title:
+                    "My Land",
+
+                value:
+                    `${lands.length} record(s)`,
+
                 description:
                     "View land currently registered to your account.",
+
                 action:
                     "showPage('lands')"
             },
 
+
             {
-                title: "Requests",
-                value: `${requests.length} request(s)`,
+                title:
+                    "Requests",
+
+                value:
+                    `${requests.length} request(s)`,
+
                 description:
                     "Create transfers and monitor land modifications.",
+
                 action:
                     "showPage('requests')"
             },
 
+
             {
-                title: "Documents",
-                value: "Registered records",
+                title:
+                    "Documents",
+
+                value:
+                    "Registered records",
+
                 description:
                     "View preliminary and final system documents.",
+
                 action:
                     "showPage('documents')"
             }
@@ -813,7 +1285,10 @@ function renderRoleDashboard(
         ];
     }
 
-    /* OFFICER */
+
+    /* -----------------------------------------
+       LAND ADMINISTRATION OFFICER
+       ----------------------------------------- */
 
     else if (
         identity.role ===
@@ -827,31 +1302,49 @@ function renderRoleDashboard(
                     "PENDING_AUTHORITY_REVIEW"
             ).length;
 
+
         cards = [
 
             {
-                title: "Regional Registry",
-                value: `${lands.length} parcel(s)`,
+                title:
+                    "Regional Registry",
+
+                value:
+                    `${lands.length} parcel(s)`,
+
                 description:
-                    `Land records within ${identity.regionId}.`,
+                    `Land records within ${regionLabel(identity.regionId)}.`,
+
                 action:
                     "showPage('lands')"
             },
 
+
             {
-                title: "Pending Review",
-                value: `${reviewCount} request(s)`,
+                title:
+                    "Pending Review",
+
+                value:
+                    `${reviewCount} request(s)`,
+
                 description:
                     "Validate and process citizen requests.",
+
                 action:
                     "showPage('requests')"
             },
 
+
             {
-                title: "Officer Operations",
-                value: "Register / Allocate",
+                title:
+                    "Officer Operations",
+
+                value:
+                    "Register / Allocate",
+
                 description:
                     "Manage authorized land administration operations.",
+
                 action:
                     "showPage('lands')"
             }
@@ -859,35 +1352,58 @@ function renderRoleDashboard(
         ];
     }
 
-    /* SUPERVISOR */
 
-    else {
+    /* -----------------------------------------
+       SUPERVISOR
+       ----------------------------------------- */
+
+    else if (
+        identity.role ===
+        "SUPERVISORY_AUTHORITY"
+    ) {
 
         cards = [
 
             {
-                title: "Registry",
-                value: `${lands.length} record(s)`,
+                title:
+                    "Registry",
+
+                value:
+                    `${lands.length} record(s)`,
+
                 description:
                     "System-wide land overview.",
+
                 action:
                     "showPage('lands')"
             },
 
+
             {
-                title: "Transactions",
-                value: `${requests.length} request(s)`,
+                title:
+                    "Transactions",
+
+                value:
+                    `${requests.length} request(s)`,
+
                 description:
                     "Review system transaction lifecycle.",
+
                 action:
                     "showPage('requests')"
             },
 
+
             {
-                title: "Audit",
-                value: "System activity",
+                title:
+                    "Audit",
+
+                value:
+                    "System activity",
+
                 description:
-                    "Inspect administrative activity.",
+                    "Inspect administrative and transaction activity.",
+
                 action:
                     "showPage('audit')"
             }
@@ -898,128 +1414,116 @@ function renderRoleDashboard(
 
     $("roleDashboard").innerHTML = `
 
-        <div class="quick-grid">
+        <div class="card-grid">
 
-            ${cards.map(card => `
+            ${
+                cards
+                    .map(
+                        card => `
 
-                <div class="quick">
+                        <article class="card">
 
-                    <span class="eyebrow">
-                        V2 SYSTEM
-                    </span>
+                            <span class="eyebrow">
+                                ${escapeHtml(card.title)}
+                            </span>
 
-                    <h3>
-                        ${escapeHtml(card.title)}
-                    </h3>
+                            <h3>
+                                ${escapeHtml(card.value)}
+                            </h3>
 
-                    <p>
-                        <strong>
-                            ${escapeHtml(card.value)}
-                        </strong>
-                        <br>
-                        ${escapeHtml(card.description)}
-                    </p>
+                            <p>
+                                ${escapeHtml(card.description)}
+                            </p>
 
-                    <button
-                        class="btn secondary"
-                        onclick="${card.action}"
-                    >
-                        Open
-                    </button>
+                            <button
+                                class="btn secondary"
+                                onclick="${card.action}"
+                            >
+                                Open
+                            </button>
 
-                </div>
+                        </article>
 
-            `).join("")}
+                    `
+                    )
+                    .join("")
+            }
 
         </div>
+
     `;
 }
 
 
 /* =========================================================
-   LAND OPERATIONS
+   ROLE ACTIONS
    ========================================================= */
 
 function configureRoleActions() {
 
-    const box =
+    const actions =
         $("landActions");
 
-    if (!box) return;
+    if (!actions) {
+        return;
+    }
 
-    if (!identity) {
+    if (
+        identity?.role ===
+        "LAND_ADMIN_OFFICER"
+    ) {
 
-        hide("landActions");
+        actions.innerHTML = `
+
+            <div class="panel-heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        OFFICER OPERATIONS
+                    </span>
+
+                    <h3>
+                        Regional Land Administration
+                    </h3>
+
+                    <p>
+                        Register new parcels or allocate
+                        available government land.
+                    </p>
+
+                </div>
+
+            </div>
+
+            <div class="actions">
+
+                <button
+                    id="registerLandButton"
+                    type="button"
+                    class="btn primary"
+                    onclick="openRegister()"
+                >
+                    Register New Land
+                </button>
+
+                <button
+                    id="allocationButton"
+                    type="button"
+                    class="btn secondary"
+                    onclick="openAllocation()"
+                >
+                    Allocate Government Land
+                </button>
+
+            </div>
+        `;
 
         return;
     }
 
-    show("landActions");
-
-    let html = "";
-
-    if (
-        identity.role ===
-        "LAND_ADMIN_OFFICER"
-    ) {
-
-        html += `
-
-            <button
-                class="btn primary"
-                onclick="openRegister()"
-            >
-                Register Land
-            </button>
-
-            <button
-                class="btn secondary"
-                onclick="openAllocation()"
-            >
-                Allocate Government Land
-            </button>
-        `;
-    }
-
-    if (
-        identity.role ===
-        "CITIZEN"
-    ) {
-
-        html += `
-
-            <button
-                class="btn primary"
-                onclick="showPage('requests')"
-            >
-                Create Land Request
-            </button>
-        `;
-    }
-
-    if (
-        identity.role ===
-        "SUPERVISORY_AUTHORITY"
-    ) {
-
-        html += `
-
-            <button
-                class="btn secondary"
-                onclick="showPage('audit')"
-            >
-                Open System Audit
-            </button>
-        `;
-    }
-
-    box.innerHTML =
-        html ||
-        `<span class="status-line">
-            Registry access only
-        </span>`;
+    actions.innerHTML = "";
 }
-
 
 /* =========================================================
    LAND REGISTRY
@@ -1027,16 +1531,36 @@ function configureRoleActions() {
 
 async function loadAllLands() {
 
+    /*
+     * Public users must never receive the complete
+     * registry through the "Show Records" action.
+     */
+
+    if (!identity) {
+
+        notify(
+            "Public access requires a specific Land ID or Survey Number search.",
+            "info"
+        );
+
+        return;
+    }
+
+
     try {
 
         const result =
             await api("/lands");
 
+
         let lands =
             extractArray(result);
 
+
+        /* CITIZEN */
+
         if (
-            identity?.role ===
+            identity.role ===
             "CITIZEN"
         ) {
 
@@ -1048,8 +1572,11 @@ async function loadAllLands() {
                 );
         }
 
+
+        /* OFFICER */
+
         else if (
-            identity?.role ===
+            identity.role ===
             "LAND_ADMIN_OFFICER"
         ) {
 
@@ -1061,9 +1588,15 @@ async function loadAllLands() {
                 );
         }
 
-        currentLands = lands;
 
-        renderLands(lands);
+        currentLands =
+            lands;
+
+
+        renderLands(
+            lands
+        );
+
 
     } catch (error) {
 
@@ -1084,8 +1617,10 @@ async function searchLand() {
     const input =
         $("landSearchInput");
 
+
     const query =
         input?.value.trim();
+
 
     if (!query) {
 
@@ -1097,9 +1632,15 @@ async function searchLand() {
         return;
     }
 
+
     try {
 
         let land = null;
+
+
+        /* -----------------------------------------
+           LAND ID
+           ----------------------------------------- */
 
         if (
             query
@@ -1112,16 +1653,31 @@ async function searchLand() {
                     `/lands/${encodeURIComponent(query)}`
                 );
 
-            land =
-                extractData(result);
 
-        } else {
+            land =
+                extractData(
+                    result
+                );
+        }
+
+
+        /* -----------------------------------------
+           SURVEY NUMBER
+           ----------------------------------------- */
+
+        else {
 
             const result =
-                await api("/lands");
+                await api(
+                    "/lands"
+                );
+
 
             const lands =
-                extractArray(result);
+                extractArray(
+                    result
+                );
+
 
             land =
                 lands.find(
@@ -1133,11 +1689,13 @@ async function searchLand() {
                 );
         }
 
+
         renderLands(
             land
                 ? [land]
                 : []
         );
+
 
     } catch (error) {
 
@@ -1166,139 +1724,204 @@ function renderLands(lands) {
                 </h3>
 
                 <p>
-                    No accessible record matched the current search.
+                    No accessible record matched
+                    the current search.
                 </p>
 
             </div>
+
         `;
 
         return;
     }
 
 
+    const isPublic =
+        !identity;
+
+
     $("landResults").innerHTML =
 
-        lands.map(
-            land => `
+        lands
+            .map(
+                land => `
 
-            <article class="record">
+                <article class="record">
 
-                <div class="record-head">
+                    <div class="record-head">
 
-                    <div>
+                        <div>
 
-                        <span class="eyebrow">
-                            ${escapeHtml(land.landId)}
+                            <span class="eyebrow">
+
+                                ${escapeHtml(
+                                    land.landId
+                                )}
+
+                            </span>
+
+
+                            <h3>
+
+                                Survey
+                                ${escapeHtml(
+                                    land.surveyNumber
+                                )}
+
+                            </h3>
+
+
+                            <p class="record-sub">
+
+                                ${escapeHtml(
+                                    land.location
+                                )}
+
+                            </p>
+
+                        </div>
+
+
+                        <span class="chip">
+
+                            ${escapeHtml(
+                                land.status
+                            )}
+
                         </span>
-
-                        <h3>
-                            Survey ${escapeHtml(land.surveyNumber)}
-                        </h3>
-
-                        <p class="record-sub">
-                            ${escapeHtml(land.location)}
-                        </p>
 
                     </div>
 
-                    <span class="chip">
-                        ${escapeHtml(land.status)}
-                    </span>
 
-                </div>
+                    <div class="grid">
 
-
-                <div class="grid">
-
-                    ${gridValue(
-                        "Parcel Area",
-                        `${land.parcelArea ?? "-"} ${land.areaUnit ?? ""}`
-                    )}
-
-                    ${gridValue(
-                        "Land Type",
-                        land.landType
-                    )}
-
-                    ${gridValue(
-                        "Land Use",
-                        land.landUseType
-                    )}
-
-                    ${gridValue(
-                        "Zone",
-                        land.zone
-                    )}
-
-                    ${gridValue(
-                        "Region",
-                        land.regionId
-                    )}
-
-                    ${gridValue(
-                        "Owner",
-                        identity
-                            ? land.currentOwnerId || "GOVERNMENT"
-                            : "Restricted"
-                    )}
-
-                    ${gridValue(
-                        "Ownership",
-                        identity
-                            ? land.ownershipStatus
-                            : "Restricted"
-                    )}
-
-                    ${gridValue(
-                        "Origin",
-                        land.origin
-                    )}
-
-                    ${gridValue(
-                        "Coordinates",
-                        land.latitude &&
-                        land.longitude
-                            ? `${land.latitude}, ${land.longitude}`
-                            : "-"
-                    )}
-
-                </div>
+                        ${gridValue(
+                            "Parcel Area",
+                            `${land.parcelArea ?? "-"} ${
+                                land.areaUnit ?? ""
+                            }`
+                        )}
 
 
-                <div class="actions">
-
-                    <button
-                        class="btn secondary"
-                        onclick="loadHistoryFor('${escapeHtml(land.landId)}')"
-                    >
-                        View History
-                    </button>
+                        ${gridValue(
+                            "Land Type",
+                            land.landType
+                        )}
 
 
-                    ${
-                        identity?.role === "CITIZEN" &&
-                        land.currentOwnerId === identity.userId
-                        ?
+                        ${gridValue(
+                            "Land Use",
+                            land.landUseType
+                        )}
 
-                        `<button
-                            class="btn primary"
-                            onclick="startRequest('${escapeHtml(land.landId)}')"
-                        >
-                            Transfer / Modify
-                        </button>`
 
-                        :
+                        ${gridValue(
+                            "Zone",
+                            land.zone
+                        )}
 
-                        ""
-                    }
 
-                </div>
+                        ${gridValue(
+                            "Region",
+                            regionLabel(
+                                land.regionId
+                            )
+                        )}
 
-            </article>
-        `
-        ).join("");
+
+                        ${gridValue(
+                            "Owner",
+                            isPublic
+                                ? "Restricted"
+                                : land.currentOwnerId ||
+                                  "GOVERNMENT"
+                        )}
+
+
+                        ${gridValue(
+                            "Ownership",
+                            isPublic
+                                ? "Restricted"
+                                : land.ownershipStatus
+                        )}
+
+
+                        ${gridValue(
+                            "Origin",
+                            land.origin
+                        )}
+
+
+                        ${
+                            !isPublic
+                                ? gridValue(
+                                    "Coordinates",
+                                    land.latitude &&
+                                    land.longitude
+                                        ? `${land.latitude}, ${land.longitude}`
+                                        : "-"
+                                )
+                                : ""
+                        }
+
+                    </div>
+
+
+                    <div class="actions">
+
+                        ${
+                            !isPublic
+                                ? `
+
+                                    <button
+                                        class="btn secondary"
+                                        onclick="loadHistoryFor('${escapeHtml(
+                                            land.landId
+                                        )}')"
+                                    >
+                                        View History
+                                    </button>
+
+                                `
+                                : ""
+                        }
+
+
+                        ${
+                            identity?.role ===
+                                "CITIZEN" &&
+
+                            land.currentOwnerId ===
+                                identity.userId
+
+                                ? `
+
+                                    <button
+                                        class="btn primary"
+                                        onclick="startRequest('${escapeHtml(
+                                            land.landId
+                                        )}')"
+                                    >
+                                        Transfer / Modify
+                                    </button>
+
+                                `
+                                : ""
+                        }
+
+                    </div>
+
+                </article>
+
+            `
+            )
+            .join("");
 }
 
+
+/* =========================================================
+   GRID VALUE
+   ========================================================= */
 
 function gridValue(
     label,
@@ -1318,6 +1941,7 @@ function gridValue(
             </strong>
 
         </div>
+
     `;
 }
 
@@ -1341,10 +1965,16 @@ function openRegister() {
         return;
     }
 
-    $("registerRegion").value =
-        identity.regionId || "";
 
-    show("registerLandPanel");
+    $("registerRegion").value =
+        regionLabel(
+            identity.regionId
+        );
+
+
+    show(
+        "registerLandPanel"
+    );
 }
 
 
@@ -1352,42 +1982,68 @@ async function registerLand(event) {
 
     event.preventDefault();
 
+
     try {
 
         const payload = {
 
             surveyNumber:
-                $("registerSurveyNumber").value.trim(),
+                $("registerSurveyNumber")
+                    .value
+                    .trim(),
 
             parcelArea:
                 Number(
-                    $("registerParcelArea").value
+                    $("registerParcelArea")
+                        .value
                 ),
 
             areaUnit:
-                $("registerAreaUnit").value,
+                $("registerAreaUnit")
+                    .value,
 
             location:
-                $("registerLocation").value.trim(),
+                $("registerLocation")
+                    .value
+                    .trim(),
 
             latitude:
-                $("registerLatitude").value
-                    ? Number($("registerLatitude").value)
+                $("registerLatitude")
+                    .value
+                    ? Number(
+                        $("registerLatitude")
+                            .value
+                    )
                     : null,
 
             longitude:
-                $("registerLongitude").value
-                    ? Number($("registerLongitude").value)
+                $("registerLongitude")
+                    .value
+                    ? Number(
+                        $("registerLongitude")
+                            .value
+                    )
                     : null,
 
             landType:
-                $("registerLandType").value,
+                $("registerLandType")
+                    .value,
 
             landUseType:
-                $("registerLandUse").value.trim(),
+                $("registerLandUse")
+                    .value
+                    .trim(),
 
             zone:
-                $("registerZone").value.trim(),
+                $("registerZone")
+                    .value
+                    .trim(),
+
+            /*
+             * IMPORTANT:
+             * Send the actual region ID to the backend.
+             * The UI only displays the human-readable label.
+             */
 
             regionId:
                 identity.regionId,
@@ -1404,15 +2060,24 @@ async function registerLand(event) {
             await api(
                 "/lands",
                 {
-                    method: "POST",
-                    body: JSON.stringify(payload)
+                    method:
+                        "POST",
+
+                    body:
+                        JSON.stringify(
+                            payload
+                        )
                 }
             );
 
 
-        hide("registerLandPanel");
+        hide(
+            "registerLandPanel"
+        );
+
 
         event.target.reset();
+
 
         notify(
             `Land ${
@@ -1422,8 +2087,11 @@ async function registerLand(event) {
             "success"
         );
 
+
         await loadAllLands();
+
         await loadDashboard();
+
 
     } catch (error) {
 
@@ -1442,10 +2110,16 @@ async function registerLand(event) {
 async function loadCitizens() {
 
     const result =
-        await api("/users/citizens");
+        await api(
+            "/users/citizens"
+        );
+
 
     citizens =
-        extractArray(result);
+        extractArray(
+            result
+        );
+
 
     return citizens;
 }
@@ -1470,38 +2144,62 @@ async function openAllocation() {
         return;
     }
 
+
     try {
 
         const list =
             await loadCitizens();
 
+
         const select =
             $("allocationCitizenId");
 
-        select.innerHTML =
-            `<option value="">
+
+        select.innerHTML = `
+
+            <option value="">
                 Select Citizen
-            </option>`;
+            </option>
+
+        `;
+
 
         list.forEach(
             citizen => {
 
                 select.insertAdjacentHTML(
                     "beforeend",
-                    `
-                    <option value="${escapeHtml(citizen.userId)}">
 
-                        ${escapeHtml(citizen.userId)}
+                    `
+
+                    <option
+                        value="${escapeHtml(
+                            citizen.userId
+                        )}"
+                    >
+
+                        ${escapeHtml(
+                            citizen.userId
+                        )}
+
                         ·
-                        ${escapeHtml(citizen.name)}
+
+                        ${escapeHtml(
+                            citizen.name
+                        )}
 
                     </option>
+
                     `
                 );
             }
         );
 
-        show("allocationPanel");
+
+        show(
+            "allocationPanel"
+        );
+
 
     } catch (error) {
 
@@ -1516,6 +2214,7 @@ async function openAllocation() {
 async function allocateLand(event) {
 
     event.preventDefault();
+
 
     try {
 
@@ -1546,23 +2245,35 @@ async function allocateLand(event) {
         await api(
             "/allocations",
             {
-                method: "POST",
-                body: JSON.stringify(payload)
+                method:
+                    "POST",
+
+                body:
+                    JSON.stringify(
+                        payload
+                    )
             }
         );
 
 
-        hide("allocationPanel");
+        hide(
+            "allocationPanel"
+        );
+
 
         event.target.reset();
+
 
         notify(
             "Government land allocation completed.",
             "success"
         );
 
+
         await loadAllLands();
+
         await loadDashboard();
+
 
     } catch (error) {
 
@@ -1572,144 +2283,256 @@ async function allocateLand(event) {
         );
     }
 }
-
-
 /* =========================================================
    REQUEST FORM
    ========================================================= */
 
-async function configureRequestForm() {
+function configureRequestForm() {
 
-    if (
-        identity?.role !==
-        "CITIZEN"
-    ) {
+    const typeSelect =
+        $("requestType");
 
-        hide("citizenRequestPanel");
-
+    if (!typeSelect) {
         return;
     }
 
-    show("citizenRequestPanel");
 
-    try {
+    typeSelect.onchange =
+        handleRequestTypeChange;
 
-        const list =
-            await loadCitizens();
 
-        const select =
-            $("requestBuyerId");
-
-        select.innerHTML =
-            `<option value="">
-                Select Buyer
-            </option>`;
-
-        list
-            .filter(
-                citizen =>
-                    citizen.userId !==
-                    identity.userId
-            )
-            .forEach(
-                citizen => {
-
-                    select.insertAdjacentHTML(
-                        "beforeend",
-                        `
-                        <option value="${escapeHtml(citizen.userId)}">
-
-                            ${escapeHtml(citizen.userId)}
-                            ·
-                            ${escapeHtml(citizen.name)}
-
-                        </option>
-                        `
-                    );
-                }
-            );
-
-    } catch (error) {
-
-        console.warn(
-            "Could not load citizens:",
-            error.message
-        );
-    }
-
-    updateRequestFields();
+    handleRequestTypeChange();
 }
 
 
-function updateRequestFields() {
+function handleRequestTypeChange() {
 
     const type =
         $("requestType")?.value;
 
-    if (!type) return;
 
-    const transfer =
+    const buyerField =
+        $("requestBuyerField");
+
+
+    const areaField =
+        $("requestAreaField");
+
+
+    const landUseField =
+        $("requestLandUseField");
+
+
+    const landTypeField =
+        $("requestLandTypeField");
+
+
+    const detailsField =
+        $("requestDetailsField");
+
+
+    /*
+     * Hide every conditional field first.
+     */
+
+    [
+        buyerField,
+        areaField,
+        landUseField,
+        landTypeField
+    ]
+        .forEach(
+            element => {
+
+                element
+                    ?.classList
+                    .add("hidden");
+
+            }
+        );
+
+
+    /*
+     * Ownership transfer
+     */
+
+    if (
         type ===
-        "OWNERSHIP_TRANSFER";
+        "OWNERSHIP_TRANSFER"
+    ) {
 
-    const area =
+        buyerField
+            ?.classList
+            .remove("hidden");
+
+        loadCitizens()
+            .then(
+                populateBuyerSelect
+            )
+            .catch(
+                error =>
+                    console.warn(
+                        "Unable to load buyers:",
+                        error.message
+                    )
+            );
+    }
+
+
+    /*
+     * Area modification
+     */
+
+    if (
         type ===
-        "AREA_MODIFICATION";
+        "AREA_MODIFICATION"
+    ) {
 
-    const use =
+        areaField
+            ?.classList
+            .remove("hidden");
+    }
+
+
+    /*
+     * Land-use modification
+     */
+
+    if (
         type ===
-        "LAND_USE_MODIFICATION";
+        "LAND_USE_MODIFICATION"
+    ) {
 
-    const landType =
+        landUseField
+            ?.classList
+            .remove("hidden");
+    }
+
+
+    /*
+     * Land-type modification
+     */
+
+    if (
         type ===
-        "LAND_TYPE_MODIFICATION";
+        "LAND_TYPE_MODIFICATION"
+    ) {
+
+        landTypeField
+            ?.classList
+            .remove("hidden");
+    }
 
 
-    $("buyerWrap")
-        ?.classList.toggle(
-            "hidden",
-            !transfer
-        );
+    if (detailsField) {
 
-    $("amountWrap")
-        ?.classList.toggle(
-            "hidden",
-            !transfer
-        );
+        detailsField
+            .querySelector("textarea")
+            ?.setAttribute(
+                "placeholder",
+                requestDetailsPlaceholder(type)
+            );
+    }
+}
 
-    $("areaWrap")
-        ?.classList.toggle(
-            "hidden",
-            !area
-        );
 
-    $("areaUnitWrap")
-        ?.classList.toggle(
-            "hidden",
-            !area
-        );
+function requestDetailsPlaceholder(type) {
 
-    $("useWrap")
-        ?.classList.toggle(
-            "hidden",
-            !use
-        );
+    switch (type) {
 
-    $("typeWrap")
-        ?.classList.toggle(
-            "hidden",
-            !landType
+        case "OWNERSHIP_TRANSFER":
+
+            return "Enter transfer reason or transaction details.";
+
+        case "AREA_MODIFICATION":
+
+            return "Explain the reason for the area/dimension modification.";
+
+        case "LAND_USE_MODIFICATION":
+
+            return "Explain the proposed change in land use.";
+
+        case "LAND_TYPE_MODIFICATION":
+
+            return "Explain the proposed change in land type.";
+
+        case "OTHER_MODIFICATION":
+
+            return "Describe the requested land-record modification.";
+
+        default:
+
+            return "Provide the reason and supporting details.";
+    }
+}
+
+
+function populateBuyerSelect(list) {
+
+    const select =
+        $("requestBuyerId");
+
+
+    if (!select) {
+        return;
+    }
+
+
+    select.innerHTML = `
+
+        <option value="">
+            Select Buyer
+        </option>
+
+    `;
+
+
+    list
+        .filter(
+            citizen =>
+                citizen.userId !==
+                identity?.userId
+        )
+        .forEach(
+            citizen => {
+
+                select.insertAdjacentHTML(
+                    "beforeend",
+
+                    `
+
+                    <option
+                        value="${escapeHtml(
+                            citizen.userId
+                        )}"
+                    >
+
+                        ${escapeHtml(
+                            citizen.userId
+                        )}
+
+                        ·
+
+                        ${escapeHtml(
+                            citizen.name
+                        )}
+
+                    </option>
+
+                    `
+                );
+            }
         );
 }
 
 
 /* =========================================================
-   CREATE REQUEST
+   START REQUEST
    ========================================================= */
 
-async function createRequest(event) {
-
-    event.preventDefault();
+async function startRequest(
+    landId
+) {
 
     if (
         identity?.role !==
@@ -1717,7 +2540,202 @@ async function createRequest(event) {
     ) {
 
         notify(
-            "Only registered citizens can create land requests.",
+            "Only citizens can create land requests.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const land =
+        currentLands.find(
+            item =>
+                item.landId ===
+                landId
+        );
+
+
+    if (!land) {
+
+        try {
+
+            const result =
+                await api(
+                    `/lands/${encodeURIComponent(
+                        landId
+                    )}`
+                );
+
+
+            const fetchedLand =
+                extractData(
+                    result
+                );
+
+
+            if (fetchedLand) {
+
+                currentLands.push(
+                    fetchedLand
+                );
+            }
+
+        } catch (error) {
+
+            notify(
+                error.message,
+                "error"
+            );
+
+            return;
+        }
+    }
+
+
+    const selectedLand =
+        currentLands.find(
+            item =>
+                item.landId ===
+                landId
+        );
+
+
+    if (
+        !selectedLand
+    ) {
+
+        notify(
+            "Land record could not be loaded.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (
+        selectedLand.currentOwnerId !==
+        identity.userId
+    ) {
+
+        notify(
+            "You can only modify land registered to your account.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (
+        selectedLand.ownerType ===
+        "GOVERNMENT"
+    ) {
+
+        notify(
+            "Government-owned land cannot be transferred or modified by a citizen.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const landInput =
+        $("requestLandId");
+
+
+    if (landInput) {
+
+        landInput.value =
+            selectedLand.landId;
+    }
+
+
+    const typeSelect =
+        $("requestType");
+
+
+    if (typeSelect) {
+
+        typeSelect.value =
+            "OWNERSHIP_TRANSFER";
+
+        handleRequestTypeChange();
+    }
+
+
+    const areaInput =
+        $("requestNewArea");
+
+
+    if (areaInput) {
+
+        areaInput.value =
+            selectedLand.parcelArea || "";
+    }
+
+
+    const landUseInput =
+        $("requestNewLandUse");
+
+
+    if (landUseInput) {
+
+        landUseInput.value =
+            selectedLand.landUseType || "";
+    }
+
+
+    const landTypeInput =
+        $("requestNewLandType");
+
+
+    if (landTypeInput) {
+
+        landTypeInput.value =
+            selectedLand.landType || "";
+    }
+
+
+    showPage("requests");
+
+/*
+ * Open the citizen request form automatically
+ * when the citizen starts a request from a land record.
+ */
+show("requestPanel");
+
+document
+    .getElementById(
+        "requestPanel"
+    )
+    ?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+
+/* =========================================================
+   CREATE REQUEST
+   ========================================================= */
+
+async function createLandRequest(
+    event
+) {
+
+    event.preventDefault();
+
+
+    if (
+        identity?.role !==
+        "CITIZEN"
+    ) {
+
+        notify(
+            "Only citizens can create requests.",
             "error"
         );
 
@@ -1726,105 +2744,130 @@ async function createRequest(event) {
 
 
     const type =
-        $("requestType").value;
+        $("requestType")
+            ?.value;
+
+
+    const landId =
+        $("requestLandId")
+            ?.value
+            .trim();
+
+
+    if (!landId) {
+
+        notify(
+            "Select a land record first.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const payload = {
+
+        landId,
+
+        requestType:
+            type,
+
+        requesterId:
+            identity.userId,
+
+        buyerId:
+            type === "OWNERSHIP_TRANSFER"
+                ? $("requestBuyerId")?.value ||
+                  null
+                : null,
+
+        requestedArea:
+            type === "AREA_MODIFICATION"
+                ? Number(
+                    $("requestNewArea")
+                        ?.value
+                )
+                : null,
+
+        requestedLandUse:
+            type === "LAND_USE_MODIFICATION"
+                ? $("requestNewLandUse")
+                    ?.value
+                    .trim()
+                : null,
+
+        requestedLandType:
+            type === "LAND_TYPE_MODIFICATION"
+                ? $("requestNewLandType")
+                    ?.value
+                    .trim()
+                : null,
+
+        details:
+            $("requestDetails")
+                ?.value
+                .trim() || "",
+
+        reason:
+            $("requestDetails")
+                ?.value
+                .trim() || ""
+    };
 
 
     try {
-
-        const payload = {
-
-            requestType:
-                type,
-
-            landId:
-                $("requestLandId")
-                    .value
-                    .trim(),
-
-            requesterId:
-                identity.userId,
-
-            sellerId:
-                identity.userId,
-
-            buyerId:
-                type === "OWNERSHIP_TRANSFER"
-                    ? $("requestBuyerId").value
-                    : null,
-
-            reason:
-                $("requestReason")
-                    .value
-                    .trim(),
-
-            agreedAmount:
-                type === "OWNERSHIP_TRANSFER" &&
-                $("requestAmount").value
-                    ? Number(
-                        $("requestAmount").value
-                    )
-                    : null,
-
-            requestedArea:
-                type === "AREA_MODIFICATION" &&
-                $("requestArea").value
-                    ? Number(
-                        $("requestArea").value
-                    )
-                    : null,
-
-            requestedAreaUnit:
-                type === "AREA_MODIFICATION"
-                    ? $("requestAreaUnit").value
-                    : null,
-
-            requestedLandUse:
-                type === "LAND_USE_MODIFICATION"
-                    ? $("requestLandUse")
-                        .value
-                        .trim()
-                    : null,
-
-            requestedLandType:
-                type === "LAND_TYPE_MODIFICATION"
-                    ? $("requestLandType").value
-                    : null,
-
-            requestedDetails:
-                $("requestReason")
-                    .value
-                    .trim()
-        };
-
 
         const result =
             await api(
                 "/requests",
                 {
-                    method: "POST",
-                    body: JSON.stringify(payload)
+                    method:
+                        "POST",
+
+                    body:
+                        JSON.stringify(
+                            payload
+                        )
                 }
+            );
+
+
+        const request =
+            extractData(
+                result
             );
 
 
         event.target.reset();
 
-        updateRequestFields();
 
-        const request =
-            extractData(result);
+        handleRequestTypeChange();
 
-        notify(
-            `Request ${
-                request?.requestId ||
-                "created"
-            } submitted successfully.`,
-            "success"
-        );
+
+        if (
+            request?.document
+        ) {
+
+            notify(
+                `Request ${request.requestId || ""} created and preliminary document generated.`,
+                "success"
+            );
+
+        } else {
+
+            notify(
+                `Request ${request?.requestId || ""} created successfully.`,
+                "success"
+            );
+        }
 
 
         await loadRequests();
+
+        await loadAllLands();
+
         await loadDashboard();
+
 
     } catch (error) {
 
@@ -1841,464 +2884,684 @@ async function createRequest(event) {
    ========================================================= */
 
 async function loadRequests() {
-
     if (!identity) {
-
-        $("requestContent").innerHTML = `
-
-            <div class="empty">
-
-                <h3>
-                    Connect MetaMask
-                </h3>
-
-                <p>
-                    Registered account access is required
-                    for transaction workflows.
-                </p>
-
-            </div>
-        `;
-
         return;
     }
 
-
     try {
+        /*
+         * Always load the complete request list first.
+         * Role-based visibility is handled below.
+         */
+        const result = await api("/requests");
 
-        const status =
-            $("requestStatusFilter")?.value;
+        let requests = extractArray(result);
 
-        const query =
-            status
-                ? `?status=${encodeURIComponent(status)}`
-                : "";
-
-
-        const result =
-            await api(
-                `/requests${query}`
+        /*
+         * ---------------------------------------------------------
+         * CITIZEN
+         * ---------------------------------------------------------
+         * A citizen can see requests connected to their account:
+         * requester / seller / buyer.
+         */
+        if (identity.role === "CITIZEN") {
+            requests = requests.filter(request =>
+                request.requesterId === identity.userId ||
+                request.sellerId === identity.userId ||
+                request.buyerId === identity.userId
             );
-
-
-        let requests =
-            extractArray(result);
-
-
-        /* CITIZEN */
-
-        if (
-            identity.role ===
-            "CITIZEN"
-        ) {
-
-            requests =
-                requests.filter(
-                    request =>
-                        request.requesterId === identity.userId ||
-                        request.sellerId === identity.userId ||
-                        request.buyerId === identity.userId
-                );
         }
 
+        /*
+         * ---------------------------------------------------------
+         * OFFICER
+         * ---------------------------------------------------------
+         * Officers must see requests belonging to their region.
+         *
+         * Do NOT depend only on request.regionId because older
+         * request records/responses may not contain that field.
+         *
+         * We therefore verify the request against the officer's
+         * regional land records as well.
+         */
+        else if (identity.role === "LAND_ADMIN_OFFICER") {
 
-        /* OFFICER */
-
-        if (
-            identity.role ===
-            "LAND_ADMIN_OFFICER"
-        ) {
+            let regionalLands = currentLands;
 
             /*
-             * Backend performs the authoritative
-             * region authorization.
-             *
-             * We intentionally don't hide requests
-             * client-side based on incomplete fields.
+             * currentLands may not yet be populated because
+             * dashboard/request loading can happen concurrently.
              */
+            if (!regionalLands.length) {
+                try {
+                    const landResult = await api("/lands");
+
+                    regionalLands = extractArray(landResult).filter(
+                        land =>
+                            land.regionId === identity.regionId
+                    );
+                } catch (landError) {
+                    console.warn(
+                        "Unable to load regional lands for request filtering:",
+                        landError.message
+                    );
+
+                    regionalLands = [];
+                }
+            }
+
+            const regionalLandIds = new Set(
+                regionalLands.map(
+                    land => land.landId
+                )
+            );
+
+            requests = requests.filter(request =>
+                request.regionId === identity.regionId ||
+                regionalLandIds.has(request.landId)
+            );
         }
 
+        /*
+         * ---------------------------------------------------------
+         * SUPERVISOR
+         * ---------------------------------------------------------
+         * Supervisor sees the complete request lifecycle.
+         */
+        else if (
+            identity.role === "SUPERVISORY_AUTHORITY"
+        ) {
+            // No filtering.
+        }
 
-        currentRequests =
-            requests;
+        /*
+         * ---------------------------------------------------------
+         * STATUS FILTER
+         * ---------------------------------------------------------
+         * The HTML contains requestStatusFilter.
+         *
+         * ALL = show everything.
+         * Otherwise show only the selected status.
+         */
+        const statusFilter =
+            $("requestStatusFilter")?.value || "ALL";
 
-        renderRequests(
-            requests
-        );
+        if (
+            statusFilter &&
+            statusFilter !== "ALL"
+        ) {
+            requests = requests.filter(
+                request =>
+                    request.status === statusFilter
+            );
+        }
+
+        /*
+         * Keep the filtered list available for request actions.
+         */
+        currentRequests = requests;
+
+        renderRequests(requests);
 
     } catch (error) {
-
         showError(
-            "requestContent",
+            "requestResults",
             error.message
         );
     }
 }
 
-
 /* =========================================================
-   REQUEST ACTIONS
+   REQUEST CARD
    ========================================================= */
 
-function requestActions(request) {
-
-    let html = "";
-
-
-    /* BUYER ACCEPTANCE */
-
-    if (
-
-        identity.role ===
-        "CITIZEN" &&
-
-        request.buyerId ===
-        identity.userId &&
-
-        request.status ===
-        "PENDING_BUYER_ACCEPTANCE"
-
-    ) {
-
-        html += `
-
-            <button
-                class="btn primary"
-                onclick="acceptRequest('${escapeHtml(request.requestId)}')"
-            >
-                Accept Transfer
-            </button>
-        `;
-    }
-
-
-    /* OFFICER REVIEW */
-
-    if (
-
-        identity.role ===
-        "LAND_ADMIN_OFFICER" &&
-
-        request.status ===
-        "PENDING_AUTHORITY_REVIEW"
-
-    ) {
-
-        html += `
-
-            <button
-                class="btn secondary"
-                onclick="reviewRequest('${escapeHtml(request.requestId)}')"
-            >
-                Validate
-            </button>
-
-            <button
-                class="btn primary"
-                onclick="approveRequest('${escapeHtml(request.requestId)}')"
-            >
-                Approve
-            </button>
-
-            <button
-                class="btn danger"
-                onclick="rejectRequest('${escapeHtml(request.requestId)}')"
-            >
-                Reject
-            </button>
-        `;
-    }
-
-
-    return html;
-}
-
-
-/* =========================================================
-   REQUEST RENDERING
-   ========================================================= */
-
-function renderRequests(requests) {
+function renderRequests(
+    requests
+) {
 
     if (!requests.length) {
 
-        $("requestContent").innerHTML = `
+        $("requestResults").innerHTML = `
 
             <div class="empty">
 
                 <h3>
-                    No requests
+                    No requests found
                 </h3>
 
                 <p>
-                    There are currently no requests
-                    visible for this account.
+                    There are no requests available
+                    for your current role.
                 </p>
 
             </div>
+
         `;
 
         return;
     }
 
 
-    $("requestContent").innerHTML =
+    $("requestResults").innerHTML =
 
-        requests.map(
-            request => `
-
-            <article class="record request">
-
-                <div class="record-head">
-
-                    <div>
-
-                        <span class="eyebrow">
-                            ${escapeHtml(
-                                request.requestType
-                            )}
-                        </span>
-
-                        <h3>
-                            ${escapeHtml(
-                                request.requestId
-                            )}
-                        </h3>
-
-                        <p class="record-sub">
-                            Land ${escapeHtml(
-                                request.landId
-                            )}
-                        </p>
-
-                    </div>
-
-
-                    <span
-                        class="chip
-                        ${request.status === "COMPLETED"
-                            ? "success"
-                            : request.status === "REJECTED"
-                                ? "danger"
-                                : "warn"}"
-                    >
-                        ${escapeHtml(
-                            request.status
-                        )}
-                    </span>
-
-                </div>
-
-
-                <div class="grid">
-
-                    ${gridValue(
-                        "Requester",
-                        request.requesterId
-                    )}
-
-                    ${gridValue(
-                        "Seller",
-                        request.sellerId
-                    )}
-
-                    ${gridValue(
-                        "Buyer",
-                        request.buyerId
-                    )}
-
-                    ${gridValue(
-                        "Validation",
-                        request.validationResult
-                    )}
-
-                    ${gridValue(
-                        "Proposed",
-                        formatDate(
-                            request.proposedAt
-                        )
-                    )}
-
-                    ${gridValue(
-                        "Completed",
-                        formatDate(
-                            request.completedAt
-                        )
-                    )}
-
-                </div>
-
-
-                ${
-                    request.validationMessage
-                        ?
-
-                        `<div class="callout success">
-
-                            ${escapeHtml(
-                                request.validationMessage
-                            )}
-
-                        </div>`
-
-                        :
-
-                        ""
-                }
-
-
-                ${
-                    request.reviewNotes
-                        ?
-
-                        `<div class="callout">
-
-                            <strong>
-                                Officer notes:
-                            </strong>
-
-                            ${escapeHtml(
-                                request.reviewNotes
-                            )}
-
-                        </div>`
-
-                        :
-
-                        ""
-                }
-
-
-                <div class="actions">
-
-                    ${requestActions(request)}
-
-                    <button
-                        class="btn secondary"
-                        onclick="viewRequest('${escapeHtml(request.requestId)}')"
-                    >
-                        Details
-                    </button>
-
-                </div>
-
-            </article>
-        `
-        ).join("");
+        requests
+            .map(
+                request =>
+                    renderRequestCard(
+                        request
+                    )
+            )
+            .join("");
 }
 
 
 /* =========================================================
-   REQUEST DETAILS
+   REQUEST CARD RENDERING
    ========================================================= */
 
-async function viewRequest(
-    requestId
+function renderRequestCard(
+    request
 ) {
 
-    try {
-
-        const result =
-            await api(
-                `/requests/${encodeURIComponent(requestId)}`
-            );
-
-        const request =
-            extractData(result);
-
-        const details = [
-
-            ["Request", request.requestId],
-
-            ["Land", request.landId],
-
-            ["Type", request.requestType],
-
-            ["Status", request.status],
-
-            ["Requester", request.requesterId],
-
-            ["Seller", request.sellerId],
-
-            ["Buyer", request.buyerId],
-
-            [
-                "Current Area",
-                request.currentArea
-                    ? `${request.currentArea} ${request.currentAreaUnit || ""}`
-                    : "-"
-            ],
-
-            [
-                "Requested Area",
-                request.requestedArea
-                    ? `${request.requestedArea} ${request.requestedAreaUnit || ""}`
-                    : "-"
-            ],
-
-            [
-                "Current Land Use",
-                request.currentLandUse
-            ],
-
-            [
-                "Requested Land Use",
-                request.requestedLandUse
-            ],
-
-            [
-                "Current Land Type",
-                request.currentLandType
-            ],
-
-            [
-                "Requested Land Type",
-                request.requestedLandType
-            ],
-
-            [
-                "Validation",
-                request.validationResult
-            ],
-
-            [
-                "Reviewed By",
-                request.reviewedBy
-            ],
-
-            [
-                "Approved",
-                formatDate(
-                    request.approvedAt
-                )
-            ],
-
-            [
-                "Completed",
-                formatDate(
-                    request.completedAt
-                )
-            ]
-
-        ];
+    const isCitizen =
+        identity?.role ===
+        "CITIZEN";
 
 
-        alert(
+    const isOfficer =
+        identity?.role ===
+        "LAND_ADMIN_OFFICER";
 
-            details
-                .map(
-                    item =>
-                        `${item[0]}: ${item[1] ?? "-"}`
-                )
-                .join("\n")
+
+    const isSupervisor =
+        identity?.role ===
+        "SUPERVISORY_AUTHORITY";
+
+
+    const status =
+        request.status ||
+        "UNKNOWN";
+
+
+    const statusClass =
+        statusClassName(
+            status
         );
 
-    } catch (error) {
 
-        notify(
-            error.message,
-            "error"
-        );
+    const validationText =
+        request.validationMessage ||
+        request.reviewNotes ||
+        "";
+
+
+    let validationHtml =
+        "";
+
+
+    /*
+     * Validation / rejection messages
+     * are displayed according to the actual
+     * request status.
+     */
+
+    if (
+        validationText
+    ) {
+
+        const messageClass =
+            status === "REJECTED"
+                ? "callout error"
+                : status === "APPROVED" ||
+                  status === "COMPLETED"
+                    ? "callout success"
+                    : "callout";
+
+
+        validationHtml = `
+
+            <div class="${messageClass}">
+
+                ${escapeHtml(
+                    validationText
+                )}
+
+            </div>
+
+        `;
+    }
+
+
+    let actions = "";
+
+
+    /*
+     * -----------------------------------------
+     * BUYER ACCEPTANCE
+     * -----------------------------------------
+     */
+
+    if (
+
+        isCitizen &&
+
+        request.requestType ===
+            "OWNERSHIP_TRANSFER" &&
+
+        request.status ===
+            "PENDING_BUYER_ACCEPTANCE" &&
+
+        request.buyerId ===
+            identity.userId
+
+    ) {
+
+        actions += `
+
+            <button
+                class="btn primary"
+                onclick="acceptRequest('${escapeHtml(
+                    request.requestId
+                )}')"
+            >
+                Accept Transfer
+            </button>
+
+        `;
+    }
+
+
+    /*
+     * -----------------------------------------
+     * OFFICER REVIEW
+     * -----------------------------------------
+     */
+
+    if (
+
+        isOfficer &&
+
+        request.status ===
+            "PENDING_AUTHORITY_REVIEW"
+
+    ) {
+
+        actions += `
+
+            <button
+                class="btn secondary"
+                onclick="reviewRequest('${escapeHtml(
+                    request.requestId
+                )}')"
+            >
+                Validate
+            </button>
+        
+
+            <button
+                class="btn primary"
+                onclick="approveRequest('${escapeHtml(
+                    request.requestId
+                )}')"
+            >
+                Approve
+            </button>
+
+
+            <button
+                class="btn danger"
+                onclick="rejectRequest('${escapeHtml(
+                    request.requestId
+                )}')"
+            >
+                Reject
+            </button>
+
+        `;
+    }
+
+
+    /*
+     * -----------------------------------------
+     * SUPERVISORY VIEW
+     * -----------------------------------------
+     */
+
+    if (
+    isSupervisor
+) {
+
+    actions += `
+
+        <button
+            class="btn secondary"
+            onclick="viewRequestDetails('${escapeHtml(
+                request.requestId
+            )}')"
+        >
+            View Request
+        </button>
+
+    `;
+}
+
+
+    /*
+     * -----------------------------------------
+     * COMPLETED DOCUMENT
+     * -----------------------------------------
+     */
+
+    if (
+        request.status ===
+            "COMPLETED"
+    ) {
+
+        actions += `
+
+            <button
+                class="btn secondary"
+                onclick="loadDocumentsForRequest('${escapeHtml(
+                    request.requestId
+                )}')"
+            >
+                View Documents
+            </button>
+
+        `;
+    }
+
+
+    return `
+
+        <article class="record request-card">
+
+            <div class="record-head">
+
+                <div>
+
+                    <span class="eyebrow">
+
+                        ${escapeHtml(
+                            request.requestId
+                        )}
+
+                    </span>
+
+
+                    <h3>
+
+                        ${escapeHtml(
+                            formatRequestType(
+                                request.requestType
+                            )
+                        )}
+
+                    </h3>
+
+
+                    <p class="record-sub">
+
+                        Land:
+                        ${escapeHtml(
+                            request.landId
+                        )}
+
+                    </p>
+
+                </div>
+
+
+                <span class="chip ${statusClass}">
+
+                    ${escapeHtml(
+                        formatRequestStatus(
+                            status
+                        )
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div class="grid">
+
+                ${gridValue(
+                    "Requester",
+                    request.requesterId
+                )}
+
+
+                ${
+                    request.sellerId
+                        ? gridValue(
+                            "Seller",
+                            request.sellerId
+                        )
+                        : ""
+                }
+
+
+                ${
+                    request.buyerId
+                        ? gridValue(
+                            "Buyer",
+                            request.buyerId
+                        )
+                        : ""
+                }
+
+
+                ${
+                    request.regionId
+                        ? gridValue(
+                            "Region",
+                            regionLabel(
+                                request.regionId
+                            )
+                        )
+                        : ""
+                }
+
+
+                ${
+                    request.requestedArea !==
+                    null &&
+                    request.requestedArea !==
+                    undefined
+                        ? gridValue(
+                            "Requested Area",
+                            `${request.requestedArea} ${
+                                request.areaUnit || ""
+                            }`
+                        )
+                        : ""
+                }
+
+
+                ${
+                    request.requestedLandUse
+                        ? gridValue(
+                            "Requested Land Use",
+                            request.requestedLandUse
+                        )
+                        : ""
+                }
+
+
+                ${
+                    request.requestedLandType
+                        ? gridValue(
+                            "Requested Land Type",
+                            request.requestedLandType
+                        )
+                        : ""
+                }
+
+
+                ${gridValue(
+                    "Created",
+                    formatDate(
+                        request.createdAt
+                    )
+                )}
+
+            </div>
+
+
+            ${
+                request.details ||
+                request.reason
+
+                    ? `
+
+                        <div class="request-details">
+
+                            <strong>
+                                Request Details
+                            </strong>
+
+                            <p>
+                                ${escapeHtml(
+                                    request.details ||
+                                    request.reason
+                                )}
+                            </p>
+
+                        </div>
+
+                    `
+
+                    : ""
+            }
+
+
+            ${validationHtml}
+
+
+            ${
+                actions
+                    ? `
+
+                        <div class="actions">
+
+                            ${actions}
+
+                        </div>
+
+                    `
+                    : ""
+            }
+
+        </article>
+
+    `;
+}
+
+
+/* =========================================================
+   REQUEST TYPE LABEL
+   ========================================================= */
+
+function formatRequestType(
+    type
+) {
+
+    const labels = {
+
+        OWNERSHIP_TRANSFER:
+            "Ownership Transfer",
+
+        AREA_MODIFICATION:
+            "Land Area Modification",
+
+        LAND_USE_MODIFICATION:
+            "Land Use Modification",
+
+        LAND_TYPE_MODIFICATION:
+            "Land Type Modification",
+
+        OTHER_MODIFICATION:
+            "Other Land Modification"
+    };
+
+
+    return (
+        labels[type] ||
+        type ||
+        "-"
+    );
+}
+
+
+/* =========================================================
+   REQUEST STATUS LABEL
+   ========================================================= */
+
+function formatRequestStatus(
+    status
+) {
+
+    const labels = {
+
+        DRAFT:
+            "Draft",
+
+        PENDING_BUYER_ACCEPTANCE:
+            "Pending Buyer Acceptance",
+
+        PENDING_AUTHORITY_REVIEW:
+            "Pending Authority Review",
+
+        APPROVED:
+            "Approved",
+
+        REJECTED:
+            "Rejected",
+
+        COMPLETED:
+            "Completed"
+    };
+
+
+    return labels[status] ||
+        String(status || "Unknown")
+            .replaceAll("_", " ");
+}
+
+
+/* =========================================================
+   REQUEST STATUS CLASS
+   ========================================================= */
+
+function statusClassName(
+    status
+) {
+
+    switch (status) {
+
+        case "COMPLETED":
+        case "APPROVED":
+        case "VALIDATED":    
+
+            return "success";
+
+
+        case "REJECTED":
+
+            return "danger";
+
+
+        case "PENDING_BUYER_ACCEPTANCE":
+        case "PENDING_AUTHORITY_REVIEW":
+
+            return "warning";
+
+
+        default:
+
+            return "";
     }
 }
 
@@ -2317,10 +3580,21 @@ async function acceptRequest(
     ) {
 
         notify(
-            "Citizen access required.",
+            "Only the designated buyer can accept a transfer.",
             "error"
         );
 
+        return;
+    }
+
+
+    const confirmed =
+        window.confirm(
+            "Accept this ownership transfer?"
+        );
+
+
+    if (!confirmed) {
         return;
     }
 
@@ -2330,22 +3604,22 @@ async function acceptRequest(
         await api(
             "/requests/accept",
             {
-                method: "POST",
+                method:
+                    "POST",
 
-                body: JSON.stringify({
+                body:
+                    JSON.stringify({
 
-                    requestId,
-
-                    buyerId:
-                        identity.userId
-
-                })
+                        requestId,
+                        buyerId:
+                            identity.userId
+                    })
             }
         );
 
 
         notify(
-            "Transfer accepted. Waiting for authority review.",
+            "Transfer accepted. It is now waiting for authority review.",
             "success"
         );
 
@@ -2353,6 +3627,9 @@ async function acceptRequest(
         await loadRequests();
 
         await loadDashboard();
+
+        await loadAllLands();
+
 
     } catch (error) {
 
@@ -2365,7 +3642,7 @@ async function acceptRequest(
 
 
 /* =========================================================
-   OFFICER VALIDATION
+   OFFICER REVIEW / VALIDATION
    ========================================================= */
 
 async function reviewRequest(
@@ -2387,9 +3664,9 @@ async function reviewRequest(
 
 
     const notes =
-        prompt(
-            "Officer review notes:",
-            "Blockchain and database records verified."
+        window.prompt(
+            "Enter validation notes:",
+            "Database and blockchain state verified."
         );
 
 
@@ -2403,19 +3680,21 @@ async function reviewRequest(
         await api(
             "/requests/review",
             {
-                method: "POST",
+                method:
+                    "POST",
 
-                body: JSON.stringify({
+                body:
+                    JSON.stringify({
 
-                    requestId,
+                        requestId,
 
-                    officerId:
-                        identity.userId,
+                        officerId:
+                            identity.userId,
 
-                    reviewNotes:
-                        notes.trim()
-
-                })
+                        reviewNotes:
+                            notes.trim() ||
+                            "Database and blockchain state verified."
+                    })
             }
         );
 
@@ -2430,6 +3709,7 @@ async function reviewRequest(
 
         await loadDashboard();
 
+
     } catch (error) {
 
         notify(
@@ -2441,7 +3721,7 @@ async function reviewRequest(
 
 
 /* =========================================================
-   OFFICER APPROVAL
+   APPROVE REQUEST
    ========================================================= */
 
 async function approveRequest(
@@ -2463,10 +3743,8 @@ async function approveRequest(
 
 
     const confirmed =
-        confirm(
-            "Approve this request?\n\n" +
-            "This operation updates the registered " +
-            "blockchain and database state."
+        window.confirm(
+            "Approve this request and register the resulting land change?"
         );
 
 
@@ -2481,74 +3759,54 @@ async function approveRequest(
             await api(
                 "/requests/approve",
                 {
-                    method: "POST",
+                    method:
+                        "POST",
 
-                    body: JSON.stringify({
+                    body:
+                        JSON.stringify({
+                            requestId,
 
-                        requestId,
-
-                        officerId:
-                            identity.userId,
-
-                        reviewNotes:
-                            "Approved after verification of blockchain state, database record, seller identity and buyer identity."
-
-                    })
+                            officerId:
+                                identity.userId
+                        })
                 }
             );
 
 
-        notify(
-            "Request completed and registered successfully.",
-            "success"
-        );
-
-
-        await Promise.allSettled([
-
-            loadRequests(),
-
-            loadDocuments(),
-
-            loadDashboard(),
-
-            loadAudit()
-
-        ]);
-
-
-        const response =
-            extractData(result);
-
-
-        const document =
-            response?.document;
+        const data =
+            extractData(
+                result
+            );
 
 
         if (
-            document?.documentId
+            data?.document
         ) {
 
             notify(
-                `Registered document ${document.documentId} generated.`,
+                "Request approved and final registered document generated.",
+                "success"
+            );
+
+        } else {
+
+            notify(
+                "Request approved successfully.",
                 "success"
             );
         }
 
+
+        await loadRequests();
+
+        await loadAllLands();
+
+        await loadDashboard();
+
+        await loadDocuments();
+
+
     } catch (error) {
-
-        /*
-         * Important:
-         * If a blockchain transaction has already
-         * completed but the DB synchronization failed,
-         * the backend recovery procedure should be
-         * used rather than repeating approval.
-         */
-
-        console.error(
-            "Approval error:",
-            error
-        );
 
         notify(
             error.message,
@@ -2559,7 +3817,7 @@ async function approveRequest(
 
 
 /* =========================================================
-   OFFICER REJECTION
+   REJECT REQUEST
    ========================================================= */
 
 async function rejectRequest(
@@ -2581,12 +3839,21 @@ async function rejectRequest(
 
 
     const reason =
-        prompt(
-            "Enter the rejection reason:"
+        window.prompt(
+            "Enter rejection reason:"
         );
 
 
-    if (!reason?.trim()) {
+    if (
+        reason === null ||
+        !reason.trim()
+    ) {
+
+        notify(
+            "A rejection reason is required.",
+            "error"
+        );
+
         return;
     }
 
@@ -2596,32 +3863,35 @@ async function rejectRequest(
         await api(
             "/requests/reject",
             {
-                method: "POST",
+                method:
+                    "POST",
 
-                body: JSON.stringify({
+                body:
+                    JSON.stringify({
+                        requestId,
 
-                    requestId,
+                        officerId:
+                            identity.userId,
 
-                    officerId:
-                        identity.userId,
-
-                    reason:
-                        reason.trim()
-
-                })
+                        reason:
+                            reason.trim()
+                    })
             }
         );
 
 
         notify(
-            "Request rejected.",
+            "Request rejected and recorded.",
             "success"
         );
 
 
         await loadRequests();
 
+        await loadAllLands();
+
         await loadDashboard();
+
 
     } catch (error) {
 
@@ -2634,35 +3904,95 @@ async function rejectRequest(
 
 
 /* =========================================================
-   START REQUEST FROM LAND CARD
+   REQUEST DETAILS
    ========================================================= */
 
-function startRequest(
-    landId
+async function viewRequestDetails(
+    requestId
 ) {
 
-    showPage("requests");
+    const request =
+        currentRequests.find(
+            item =>
+                item.requestId ===
+                requestId
+        );
 
-    if ($("requestLandId")) {
 
-        $("requestLandId").value =
-            landId;
+    if (!request) {
+
+        notify(
+            "Request not found.",
+            "error"
+        );
+
+        return;
     }
 
-    configureRequestForm();
+
+    const message = [
+
+        `Request: ${request.requestId}`,
+
+        `Land: ${request.landId}`,
+
+        `Type: ${formatRequestType(
+            request.requestType
+        )}`,
+
+        `Status: ${formatRequestStatus(
+            request.status
+        )}`,
+
+        `Requester: ${request.requesterId}`,
+
+        request.sellerId
+            ? `Seller: ${request.sellerId}`
+            : null,
+
+        request.buyerId
+            ? `Buyer: ${request.buyerId}`
+            : null,
+
+        request.regionId
+            ? `Region: ${regionLabel(
+                request.regionId
+            )}`
+            : null,
+
+        request.details
+            ? `Details: ${request.details}`
+            : null,
+
+        request.reviewNotes
+            ? `Review: ${request.reviewNotes}`
+            : null,
+
+        request.validationMessage
+            ? `Validation: ${request.validationMessage}`
+            : null
+
+    ]
+        .filter(Boolean)
+        .join("\n");
+
+
+    window.alert(
+        message
+    );
 }
-
-
 /* =========================================================
    DOCUMENTS
    ========================================================= */
 
 async function loadDocuments() {
 
+    const container =
+        $("documentContent");
+
     if (!identity) {
 
-        $("documentContent").innerHTML = `
-
+        container.innerHTML = `
             <div class="empty">
 
                 <h3>
@@ -2683,12 +4013,20 @@ async function loadDocuments() {
 
     try {
 
-        const result =
+        /* -------------------------------------------------
+           LOAD LAND RECORDS
+           ------------------------------------------------- */
+
+        const landResult =
             await api("/lands");
 
         let lands =
-            extractArray(result);
+            extractArray(landResult);
 
+
+        /* -------------------------------------------------
+           ROLE-BASED LAND VISIBILITY
+           ------------------------------------------------- */
 
         if (
             identity.role ===
@@ -2704,7 +4042,7 @@ async function loadDocuments() {
         }
 
 
-        if (
+        else if (
             identity.role ===
             "LAND_ADMIN_OFFICER"
         ) {
@@ -2718,7 +4056,20 @@ async function loadDocuments() {
         }
 
 
-        const documents = [];
+        /*
+         * SUPERVISOR:
+         * No filtering.
+         * Supervisor can see documents
+         * from all land records.
+         */
+
+
+        /* -------------------------------------------------
+           LOAD DOCUMENTS FOR EACH VISIBLE LAND
+           ------------------------------------------------- */
+
+        const documentMap =
+            new Map();
 
 
         for (
@@ -2729,33 +4080,327 @@ async function loadDocuments() {
 
                 const result =
                     await api(
-                        `/documents/land/${encodeURIComponent(land.landId)}`
+                        `/documents/land/${encodeURIComponent(
+                            land.landId
+                        )}`
                     );
 
-                documents.push(
-                    ...extractArray(result)
+
+                const documents =
+                    extractArray(result);
+
+
+                documents.forEach(
+                    document => {
+
+                        if (
+                            document?.documentId
+                        ) {
+
+                            documentMap.set(
+                                document.documentId,
+                                {
+                                    ...document,
+                                    landId:
+                                        document.landId ||
+                                        land.landId
+                                }
+                            );
+
+                        }
+
+                    }
                 );
 
-            } catch {
+
+            } catch (error) {
+
                 /*
                  * A land record may legitimately
                  * have no documents.
                  */
+
+                console.warn(
+                    `Could not load documents for ${land.landId}:`,
+                    error.message
+                );
+
             }
+
         }
+
+
+        /* -------------------------------------------------
+           RENDER
+           ------------------------------------------------- */
+
+        renderDocuments(
+            Array.from(
+                documentMap.values()
+            )
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Document loading error:",
+            error
+        );
+
+        showError(
+            "documentContent",
+            error.message
+        );
+
+    }
+
+}
+
+/* =========================================================
+   DOCUMENTS FOR REQUEST
+   ========================================================= */
+
+async function loadDocumentsForRequest(
+    requestId
+) {
+
+    if (!identity) {
+        return;
+    }
+
+
+    try {
+
+        const result =
+            await api(
+                `/documents/request/${encodeURIComponent(
+                    requestId
+                )}`
+            );
+
+
+        const documents =
+            extractArray(result);
 
 
         renderDocuments(
             documents
         );
 
+
+        showPage(
+            "documents"
+        );
+
+
     } catch (error) {
 
-        showError(
-            "documentContent",
-            error.message
+        notify(
+            error.message,
+            "error"
         );
     }
+}
+
+
+/* =========================================================
+   DOCUMENTS FOR LAND
+   ========================================================= */
+
+async function loadDocumentsForLand(
+    landId
+) {
+
+    if (!identity) {
+        return;
+    }
+
+
+    try {
+
+        const result =
+            await api(
+                `/documents/land/${encodeURIComponent(
+                    landId
+                )}`
+            );
+
+
+        const documents =
+            extractArray(result);
+
+
+        renderDocuments(
+            documents
+        );
+
+
+        showPage(
+            "documents"
+        );
+
+
+    } catch (error) {
+
+        notify(
+            error.message,
+            "error"
+        );
+    }
+}
+
+
+/* =========================================================
+   DOCUMENT TYPE LABEL
+   ========================================================= */
+
+function documentTypeLabel(
+    type
+) {
+
+    const labels = {
+
+        PRELIMINARY_TRANSACTION_RECORD:
+            "Preliminary Transaction Record",
+
+        LAND_ALLOCATION_RECORD:
+            "Final Land Allocation Record",
+
+        LAND_TRANSFER_RECORD:
+            "Final Land Transfer Record",
+
+        LAND_AREA_MODIFICATION_RECORD:
+            "Final Land Area Modification Record",
+
+        LAND_USE_MODIFICATION_RECORD:
+            "Final Land Use Modification Record",
+
+        LAND_TYPE_MODIFICATION_RECORD:
+            "Final Land Type Modification Record",
+
+        LAND_MODIFICATION_RECORD:
+            "Final Land Modification Record"
+    };
+
+
+    return (
+        labels[type] ||
+        type ||
+        "System Record"
+    );
+}
+
+
+/* =========================================================
+   PRELIMINARY DOCUMENT CHECK
+   ========================================================= */
+
+function isPreliminaryDocument(
+    document
+) {
+
+    return (
+
+        document.documentType ===
+            "PRELIMINARY_TRANSACTION_RECORD" ||
+
+        document.documentType ===
+            "PRELIMINARY_TRANSFER_RECORD" ||
+
+        document.documentType ===
+            "PRELIMINARY_MODIFICATION_RECORD" ||
+
+        String(
+            document.documentType || ""
+        )
+            .toUpperCase()
+            .includes("PRELIMINARY")
+
+    );
+}
+
+
+/* =========================================================
+   DOCUMENT STATUS
+   ========================================================= */
+
+function documentStatus(
+    document
+) {
+
+    /*
+     * Preliminary documents are intentionally
+     * NOT presented as blockchain-anchored
+     * final records.
+     */
+
+    if (
+        isPreliminaryDocument(
+            document
+        )
+    ) {
+
+        return {
+
+            label:
+                "PRELIMINARY",
+
+            className:
+                "warning"
+        };
+    }
+
+
+    /*
+     * Final document with both IPFS and
+     * blockchain anchor.
+     */
+
+    if (
+        document.ipfsCid &&
+        document.blockchainReference
+    ) {
+
+        return {
+
+            label:
+                "BLOCKCHAIN ANCHORED",
+
+            className:
+                "success"
+        };
+    }
+
+
+    /*
+     * Document uploaded to IPFS but not
+     * yet anchored.
+     */
+
+    if (
+        document.ipfsCid
+    ) {
+
+        return {
+
+            label:
+                "IPFS STORED",
+
+            className:
+                "success"
+        };
+    }
+
+
+    return {
+
+        label:
+            "SYSTEM RECORD",
+
+        className:
+            ""
+    };
 }
 
 
@@ -2769,165 +4414,350 @@ function renderDocuments(
 
     if (!documents.length) {
 
-        $("documentContent").innerHTML = `
+        $("documentResults").innerHTML = `
 
             <div class="empty">
 
                 <h3>
-                    No documents
+                    No documents found
                 </h3>
 
                 <p>
-                    Generated preliminary and registered
-                    records will appear here.
+                    No documents are available
+                    for your current access level.
                 </p>
 
             </div>
+
         `;
 
         return;
     }
 
 
-    $("documentContent").innerHTML =
+    $("documentResults").innerHTML =
 
-        documents.map(
-            document => `
-
-            <article class="record document">
-
-                <div class="record-head">
-
-                    <div>
-
-                        <span class="eyebrow">
-                            ${escapeHtml(
-                                document.documentType
-                            )}
-                        </span>
-
-                        <h3>
-                            ${escapeHtml(
-                                document.documentId
-                            )}
-                        </h3>
-
-                        <p class="record-sub">
-                            Land ${escapeHtml(
-                                document.landId
-                            )}
-                        </p>
-
-                    </div>
-
-                    <span class="chip success">
-                        BLOCKCHAIN ANCHORED
-                    </span>
-
-                </div>
-
-
-                <div class="grid">
-
-                    ${gridValue(
-                        "Request",
-                        document.requestId
-                    )}
-
-                    ${gridValue(
-                        "Created",
-                        formatDate(
-                            document.createdAt
-                        )
-                    )}
-
-                    ${gridValue(
-                        "SHA-256",
-                        document.sha256Hash
-                    )}
-
-                    ${gridValue(
-                        "IPFS CID",
-                        document.ipfsCid
-                    )}
-
-                    ${gridValue(
-                        "Blockchain",
-                        document.blockchainReference
-                    )}
-
-                    ${gridValue(
-                        "Created By",
-                        document.createdBy
-                    )}
-
-                </div>
-
-
-                <div class="actions">
-
-                    <button
-                        class="btn primary"
-                        onclick="openDocument('${escapeHtml(document.documentId)}')"
-                    >
-                        Open PDF
-                    </button>
-
-                </div>
-
-            </article>
-        `
-        ).join("");
+        documents
+            .map(
+                document =>
+                    renderDocumentCard(
+                        document
+                    )
+            )
+            .join("");
 }
 
 
 /* =========================================================
-   OPEN PDF
+   DOCUMENT CARD
+   ========================================================= */
+
+function renderDocumentCard(
+    document
+) {
+
+    const status =
+        documentStatus(
+            document
+        );
+
+
+    const preliminary =
+        isPreliminaryDocument(
+            document
+        );
+
+
+    return `
+
+        <article class="record document-card">
+
+            <div class="record-head">
+
+                <div>
+
+                    <span class="eyebrow">
+
+                        ${escapeHtml(
+                            document.documentId
+                        )}
+
+                    </span>
+
+
+                    <h3>
+
+                        ${escapeHtml(
+                            documentTypeLabel(
+                                document.documentType
+                            )
+                        )}
+
+                    </h3>
+
+
+                    <p class="record-sub">
+
+                        ${
+                            document.landId
+                                ? `Land: ${escapeHtml(
+                                    document.landId
+                                )}`
+                                : "System document"
+                        }
+
+                    </p>
+
+                </div>
+
+
+                <span class="chip ${status.className}">
+
+                    ${status.label}
+
+                </span>
+
+            </div>
+
+
+            <div class="grid">
+
+                ${
+                    document.requestId
+                        ? gridValue(
+                            "Request",
+                            document.requestId
+                        )
+                        : ""
+                }
+
+
+                ${
+                    document.transactionId
+                        ? gridValue(
+                            "Transaction",
+                            document.transactionId
+                        )
+                        : ""
+                }
+
+
+                ${gridValue(
+                    "Created",
+                    formatDate(
+                        document.createdAt
+                    )
+                )}
+
+
+                ${
+                    document.sha256Hash
+                        ? gridValue(
+                            "SHA-256",
+                            document.sha256Hash
+                        )
+                        : ""
+                }
+
+
+                ${
+                    document.ipfsCid
+                        ? gridValue(
+                            "IPFS CID",
+                            document.ipfsCid
+                        )
+                        : ""
+                }
+
+
+                ${
+                    document.blockchainReference
+                        ? gridValue(
+                            "Blockchain Reference",
+                            document.blockchainReference
+                        )
+                        : ""
+                }
+
+            </div>
+
+
+            ${
+                preliminary
+
+                    ? `
+
+                        <div class="callout">
+
+                            This is a preliminary system-generated
+                            transaction record. It is not the final
+                            registered land record.
+
+                        </div>
+
+                    `
+
+                    : `
+
+                        <div class="callout success">
+
+                            This document represents the final
+                            registered system record for the
+                            completed operation.
+
+                        </div>
+
+                    `
+            }
+
+
+            <div class="actions">
+
+                ${
+                    document.filePath
+
+                        ? `
+
+                            <button
+                                class="btn secondary"
+                                onclick="openDocument('${escapeHtml(
+                                    document.documentId
+                                )}')"
+                            >
+                                Open Document
+                            </button>
+
+                          `
+
+                        : ""
+                }
+
+
+                ${
+                    document.ipfsCid
+
+                        ? `
+
+                            <button
+                                class="btn secondary"
+                                onclick="openIpfsDocument('${escapeHtml(
+                                    document.ipfsCid
+                                )}')"
+                            >
+                                Open IPFS
+                            </button>
+
+                          `
+
+                        : ""
+                }
+
+            </div>
+
+        </article>
+
+    `;
+}
+
+
+/* =========================================================
+   OPEN GENERATED PDF
    ========================================================= */
 
 function openDocument(
     documentId
 ) {
 
+    if (!documentId) {
+
+        notify(
+            "Document ID is unavailable.",
+            "error"
+        );
+
+        return;
+    }
+
+
     const url =
-        `${API_BASE}/documents/` +
-        `${encodeURIComponent(documentId)}/download`;
+        `${API_BASE}/documents/${encodeURIComponent(
+            documentId
+        )}/download`;
+
 
     window.open(
         url,
-        "_blank"
+        "_blank",
+        "noopener,noreferrer"
     );
 }
 
 
 /* =========================================================
-   LAND HISTORY
+   IPFS DOCUMENT
    ========================================================= */
 
+function openIpfsDocument(
+    cid
+) {
+
+    if (!cid) {
+
+        notify(
+            "IPFS CID is unavailable.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const gateway =
+        `http://127.0.0.1:8080/ipfs/${encodeURIComponent(
+            cid
+        )}`;
+
+
+    window.open(
+        gateway,
+        "_blank",
+        "noopener,noreferrer"
+    );
+}
+
+
+/* =========================================================
+   HISTORY
+   ========================================================= */
+function loadHistoryFromInput() {
+
+    const input =
+        $("historyLandId");
+
+    const landId =
+        input?.value.trim();
+
+    if (!landId) {
+        notify(
+            "Enter a Land ID.",
+            "error"
+        );
+
+        return;
+    }
+
+    loadHistoryFor(
+        landId
+    );
+}
 async function loadHistoryFor(
     landId
 ) {
 
-    showPage("history");
-
-    $("historyLandId").value =
-        landId;
-
-    await loadHistory();
-}
-
-
-async function loadHistory() {
-
-    const landId =
-        $("historyLandId")
-            ?.value
-            .trim();
-
-    if (!landId) {
+    if (!identity) {
 
         notify(
-            "Enter a Land ID.",
+            "Land history is available only to authenticated users.",
             "error"
         );
 
@@ -2939,39 +4769,58 @@ async function loadHistory() {
 
         const result =
             await api(
-                `/requests/land/${encodeURIComponent(landId)}/history`
+                `/lands/${encodeURIComponent(
+                    landId
+                )}/history`
             );
 
 
-        const events =
+        const history =
             extractArray(result);
 
 
         renderHistory(
-            events
+            history,
+            landId
         );
+
+
+        showPage(
+            "history"
+        );
+
 
     } catch (error) {
 
-        showError(
-            "historyContent",
-            error.message
+        notify(
+            error.message,
+            "error"
         );
     }
 }
 
 
 /* =========================================================
-   HISTORY TIMELINE
+   HISTORY RENDERING
    ========================================================= */
 
 function renderHistory(
-    events
+    events,
+    landId
 ) {
+
+    const container =
+        $("historyResults");
+
+
+    if (!container) {
+        return;
+    }
+
 
     if (!events.length) {
 
-        $("historyContent").innerHTML = `
+        container.innerHTML = `
 
             <div class="empty">
 
@@ -2980,110 +4829,336 @@ function renderHistory(
                 </h3>
 
                 <p>
-                    No lifecycle events are recorded
-                    for this land yet.
+                    No recorded land events are available
+                    for ${escapeHtml(landId)}.
                 </p>
 
             </div>
+
         `;
 
         return;
     }
 
 
-    $("historyContent").innerHTML = `
+    container.innerHTML = `
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="eyebrow">
+                    LAND HISTORY
+                </span>
+
+                <h3>
+                    ${escapeHtml(landId)}
+                </h3>
+
+            </div>
+
+        </div>
+
 
         <div class="timeline">
 
-            ${events.map(
-                event => `
-
-                <div class="timeline-item">
-
-                    <div class="timeline-dot"></div>
-
-                    <div class="timeline-card">
-
-                        <span class="eyebrow">
-                            ${escapeHtml(
-                                event.eventType
-                            )}
-                        </span>
-
-                        <h3>
-                            ${escapeHtml(
-                                event.description ||
-                                event.eventType
-                            )}
-                        </h3>
-
-                        <p>
-                            ${formatDate(
-                                event.createdAt
-                            )}
-                            ·
-                            Performed by
-                            ${escapeHtml(
-                                event.performedBy
-                            )}
-                        </p>
-
-
-                        <div class="grid">
-
-                            ${gridValue(
-                                "Previous Owner",
-                                event.previousOwnerId
-                            )}
-
-                            ${gridValue(
-                                "New Owner",
-                                event.newOwnerId
-                            )}
-
-                            ${gridValue(
-                                "Previous Area",
-                                event.previousArea
-                            )}
-
-                            ${gridValue(
-                                "New Area",
-                                event.newArea
-                            )}
-
-                            ${gridValue(
-                                "Previous Land Use",
-                                event.previousLandUse
-                            )}
-
-                            ${gridValue(
-                                "New Land Use",
-                                event.newLandUse
-                            )}
-
-                            ${gridValue(
-                                "Document",
-                                event.documentId
-                            )}
-
-                            ${gridValue(
-                                "Blockchain",
-                                event.blockchainReference
-                            )}
-
-                        </div>
-
-                    </div>
-
-                </div>
-            `
-            ).join("")}
+            ${
+                events
+                    .map(
+                        event =>
+                            renderHistoryEvent(
+                                event
+                            )
+                    )
+                    .join("")
+            }
 
         </div>
+
     `;
 }
 
 
+/* =========================================================
+   HISTORY EVENT
+   ========================================================= */
+
+function renderHistoryEvent(
+    event
+) {
+
+    const eventType =
+        event.eventType ||
+        "LAND_EVENT";
+
+
+    return `
+
+        <article class="timeline-item">
+
+            <div class="timeline-dot"></div>
+
+
+            <div class="timeline-content">
+
+                <div class="record-head">
+
+                    <div>
+
+                        <span class="eyebrow">
+
+                            ${escapeHtml(
+                                event.eventId ||
+                                eventType
+                            )}
+
+                        </span>
+
+
+                        <h3>
+
+                            ${escapeHtml(
+                                formatEventType(
+                                    eventType
+                                )
+                            )}
+
+                        </h3>
+
+                    </div>
+
+
+                    <span class="chip">
+
+                        ${escapeHtml(
+                            formatDate(
+                                event.createdAt
+                            )
+                        )}
+
+                    </span>
+
+                </div>
+
+
+                <div class="grid">
+
+                    ${
+                        event.previousOwnerId ||
+                        event.newOwnerId
+
+                            ? gridValue(
+                                "Ownership",
+                                `${
+                                    event.previousOwnerId ||
+                                    "GOVERNMENT"
+                                } → ${
+                                    event.newOwnerId ||
+                                    "GOVERNMENT"
+                                }`
+                            )
+
+                            : ""
+                    }
+
+
+                    ${
+                        event.previousArea !==
+                            null &&
+                        event.previousArea !==
+                            undefined
+
+                            ? gridValue(
+                                "Area",
+                                `${
+                                    event.previousArea
+                                } → ${
+                                    event.newArea
+                                }`
+                            )
+
+                            : ""
+                    }
+
+
+                    ${
+                        event.previousLandUse ||
+                        event.newLandUse
+
+                            ? gridValue(
+                                "Land Use",
+                                `${
+                                    event.previousLandUse ||
+                                    "-"
+                                } → ${
+                                    event.newLandUse ||
+                                    "-"
+                                }`
+                            )
+
+                            : ""
+                    }
+
+
+                    ${
+                        event.previousLandType ||
+                        event.newLandType
+
+                            ? gridValue(
+                                "Land Type",
+                                `${
+                                    event.previousLandType ||
+                                    "-"
+                                } → ${
+                                    event.newLandType ||
+                                    "-"
+                                }`
+                            )
+
+                            : ""
+                    }
+
+
+                    ${
+                        event.performedBy
+                            ? gridValue(
+                                "Performed By",
+                                event.performedBy
+                            )
+                            : ""
+                    }
+
+
+                    ${
+                        event.documentId
+                            ? gridValue(
+                                "Document",
+                                event.documentId
+                            )
+                            : ""
+                    }
+
+                </div>
+
+
+                ${
+                    event.reason ||
+                    event.description
+
+                        ? `
+
+                            <p class="record-description">
+
+                                ${escapeHtml(
+                                    event.description ||
+                                    event.reason
+                                )}
+
+                            </p>
+
+                          `
+
+                        : ""
+                }
+
+
+                ${
+                    event.blockchainReference
+
+                        ? `
+
+                            <div class="callout success">
+
+                                Blockchain transaction:
+
+                                <br>
+
+                                <code>
+                                    ${escapeHtml(
+                                        event.blockchainReference
+                                    )}
+                                </code>
+
+                            </div>
+
+                          `
+
+                        : ""
+                }
+
+            </div>
+
+        </article>
+
+    `;
+}
+
+
+/* =========================================================
+   EVENT TYPE LABEL
+   ========================================================= */
+
+function formatEventType(
+    type
+) {
+
+    const labels = {
+
+        LAND_REGISTRATION:
+            "Land Registration",
+
+        LAND_ALLOCATION:
+            "Government Land Allocation",
+
+        LAND_ALLOCATION_RECONCILIATION:
+            "Allocation Reconciliation",
+
+        TRANSFER_PROPOSED:
+            "Ownership Transfer Proposed",
+
+        TRANSFER_ACCEPTED:
+            "Ownership Transfer Accepted",
+
+        TRANSFER_APPROVED:
+            "Ownership Transfer Approved",
+
+        TRANSFER_REJECTED:
+            "Ownership Transfer Rejected",
+
+        LAND_UPDATE_PROPOSED:
+            "Land Update Proposed",
+
+        LAND_UPDATE_APPROVED:
+            "Land Update Approved",
+
+        LAND_UPDATE_REJECTED:
+            "Land Update Rejected",
+
+        REQUEST_CREATED:
+            "Request Created",
+
+        REQUEST_REVIEWED:
+            "Request Reviewed",
+
+        REQUEST_APPROVED:
+            "Request Approved",
+
+        REQUEST_REJECTED:
+            "Request Rejected"
+    };
+
+
+    return (
+        labels[type] ||
+        type
+            .replaceAll("_", " ")
+            .replace(
+                /\b\w/g,
+                character =>
+                    character.toUpperCase()
+            )
+    );
+}
 /* =========================================================
    AUDIT
    ========================================================= */
@@ -3091,22 +5166,46 @@ function renderHistory(
 async function loadAudit() {
 
     if (!identity) {
+        return;
+    }
 
-        $("auditContent").innerHTML = `
 
-            <div class="empty">
+    /*
+     * Only officers and supervisors can access
+     * the administrative audit trail.
+     */
 
-                <h3>
-                    Connect MetaMask
-                </h3>
+    if (
+        identity.role !==
+            "LAND_ADMIN_OFFICER" &&
 
-                <p>
-                    Audit information requires
-                    authenticated access.
-                </p>
+        identity.role !==
+            "SUPERVISORY_AUTHORITY"
+    ) {
 
-            </div>
-        `;
+        const container =
+            $("auditResults");
+
+
+        if (container) {
+
+            container.innerHTML = `
+
+                <div class="empty">
+
+                    <h3>
+                        Audit access restricted
+                    </h3>
+
+                    <p>
+                        Your role does not have access
+                        to the administrative audit trail.
+                    </p>
+
+                </div>
+
+            `;
+        }
 
         return;
     }
@@ -3115,20 +5214,73 @@ async function loadAudit() {
     try {
 
         const result =
-            await api("/audit");
+            await api(
+                "/audit"
+            );
 
-        const events =
-            extractArray(result);
 
+        let events =
+            extractArray(
+                result
+            );
+
+
+        /*
+         * Officer:
+         * Restrict audit visibility to the officer's
+         * region or actions performed by that officer.
+         */
+
+        if (
+            identity.role ===
+            "LAND_ADMIN_OFFICER"
+        ) {
+
+            events =
+                events.filter(
+                    event => {
+
+                        if (
+                            event.regionId ===
+                            identity.regionId
+                        ) {
+
+                            return true;
+                        }
+
+
+                        if (
+                            event.userId ===
+                            identity.userId ||
+
+                            event.performedBy ===
+                            identity.userId
+                        ) {
+
+                            return true;
+                        }
+
+
+                        return false;
+                    }
+                );
+        }
+
+
+        /*
+         * Supervisor:
+         * System-wide audit visibility.
+         */
 
         renderAudit(
             events
         );
 
+
     } catch (error) {
 
         showError(
-            "auditContent",
+            "auditResults",
             error.message
         );
     }
@@ -3143,261 +5295,448 @@ function renderAudit(
     events
 ) {
 
+    const container =
+        $("auditResults");
+
+
+    if (!container) {
+        return;
+    }
+
+
     if (!events.length) {
 
-        $("auditContent").innerHTML = `
+        container.innerHTML = `
 
             <div class="empty">
 
                 <h3>
-                    No audit events
+                    No audit events found
                 </h3>
 
                 <p>
-                    System activity will appear here.
+                    No administrative events are
+                    available for your current access level.
                 </p>
 
             </div>
+
         `;
 
         return;
     }
 
 
-    $("auditContent").innerHTML =
+    container.innerHTML =
 
-        events.map(
-            event => `
-
-            <article class="record">
-
-                <div class="record-head">
-
-                    <div>
-
-                        <span class="eyebrow">
-                            ${escapeHtml(
-                                event.entityType
-                            )}
-                        </span>
-
-                        <h3>
-                            ${escapeHtml(
-                                event.action
-                            )}
-                        </h3>
-
-                    </div>
-
-                    <span class="chip">
-                        ${formatDate(
-                            event.createdAt
-                        )}
-                    </span>
-
-                </div>
-
-
-                <div class="grid">
-
-                    ${gridValue(
-                        "Entity",
-                        event.entityId
-                    )}
-
-                    ${gridValue(
-                        "Performed By",
-                        event.performedBy
-                    )}
-
-                    ${gridValue(
-                        "Details",
-                        typeof event.details === "string"
-                            ? event.details
-                            : JSON.stringify(
-                                event.details || {}
-                            )
-                    )}
-
-                </div>
-
-            </article>
-        `
-        ).join("");
+        events
+            .map(
+                event =>
+                    renderAuditEvent(
+                        event
+                    )
+            )
+            .join("");
 }
 
 
 /* =========================================================
-   ERROR DISPLAY
+   AUDIT EVENT
+   ========================================================= */
+
+function renderAuditEvent(
+    event
+) {
+
+    return `
+
+        <article class="record audit-card">
+
+            <div class="record-head">
+
+                <div>
+
+                    <span class="eyebrow">
+
+                        ${escapeHtml(
+                            event.eventId ||
+                            event.id ||
+                            "AUDIT"
+                        )}
+
+                    </span>
+
+
+                    <h3>
+
+                        ${escapeHtml(
+                            event.action ||
+                            event.eventType ||
+                            "System Activity"
+                        )}
+
+                    </h3>
+
+
+                    <p class="record-sub">
+
+                        ${escapeHtml(
+                            event.description ||
+                            event.message ||
+                            "Administrative system activity."
+                        )}
+
+                    </p>
+
+                </div>
+
+
+                <span class="chip">
+
+                    ${escapeHtml(
+                        formatDate(
+                            event.createdAt
+                        )
+                    )}
+
+                </span>
+
+            </div>
+
+
+            <div class="grid">
+
+                ${
+                    event.userId
+                        ? gridValue(
+                            "User",
+                            event.userId
+                        )
+                        : ""
+                }
+
+
+                ${
+                    event.role
+                        ? gridValue(
+                            "Role",
+                            roleLabel(
+                                event.role
+                            )
+                        )
+                        : ""
+                }
+
+
+                ${
+                    event.regionId
+                        ? gridValue(
+                            "Region",
+                            regionLabel(
+                                event.regionId
+                            )
+                        )
+                        : ""
+                }
+
+
+                ${
+                    event.landId
+                        ? gridValue(
+                            "Land",
+                            event.landId
+                        )
+                        : ""
+                }
+
+
+                ${
+                    event.requestId
+                        ? gridValue(
+                            "Request",
+                            event.requestId
+                        )
+                        : ""
+                }
+
+
+                ${
+                    event.ipAddress
+                        ? gridValue(
+                            "IP",
+                            event.ipAddress
+                        )
+                        : ""
+                }
+
+            </div>
+
+        </article>
+
+    `;
+}
+
+
+/* =========================================================
+   GENERIC ERROR DISPLAY
    ========================================================= */
 
 function showError(
-    elementId,
+    containerId,
     message
 ) {
 
-    const element =
-        $(elementId);
+    const container =
+        $(containerId);
 
-    if (!element) return;
 
-    element.innerHTML = `
+    if (!container) {
 
-        <div class="empty">
+        notify(
+            message,
+            "error"
+        );
+
+        return;
+    }
+
+
+    container.innerHTML = `
+
+        <div class="empty error-state">
 
             <h3>
                 Unable to load data
             </h3>
 
             <p>
-                ${escapeHtml(message)}
+                ${escapeHtml(
+                    message ||
+                    "An unexpected error occurred."
+                )}
             </p>
 
         </div>
+
     `;
 }
 
 
 /* =========================================================
-   EVENT BINDINGS
+   REQUEST FORM RESET
    ========================================================= */
 
-function bindEvents() {
+function resetRequestForm() {
 
-    /* Navigation */
-
-    document
-        .querySelectorAll(".nav-btn")
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    () => {
-                        showPage(
-                            button.dataset.page
-                        );
-                    }
-                );
-            }
-        );
+    const form =
+        $("requestForm");
 
 
-    /* Register */
+    if (form) {
 
-    $("registerLandForm")
-        ?.addEventListener(
-            "submit",
-            registerLand
-        );
+        form.reset();
+    }
 
 
-    /* Allocation */
-
-    $("allocationForm")
-        ?.addEventListener(
-            "submit",
-            allocateLand
-        );
+    handleRequestTypeChange();
+}
 
 
-    /* Requests */
+/* =========================================================
+   ALLOCATION FORM RESET
+   ========================================================= */
 
-    $("requestForm")
-        ?.addEventListener(
-            "submit",
-            createRequest
-        );
+function resetAllocationForm() {
 
-
-    $("requestType")
-        ?.addEventListener(
-            "change",
-            updateRequestFields
-        );
+    const form =
+        $("allocationForm");
 
 
-    /* Search with Enter */
+    if (form) {
 
-    $("landSearchInput")
-        ?.addEventListener(
-            "keydown",
-            event => {
-
-                if (
-                    event.key ===
-                    "Enter"
-                ) {
-
-                    searchLand();
-                }
-            }
-        );
+        form.reset();
+    }
+}
 
 
-    /* Wallet changes */
+/* =========================================================
+   REGISTER FORM RESET
+   ========================================================= */
+
+function resetRegisterForm() {
+
+    const form =
+        $("registerForm");
+
+
+    if (form) {
+
+        form.reset();
+    }
+
 
     if (
-        window.ethereum
+        identity?.role ===
+        "LAND_ADMIN_OFFICER"
     ) {
 
-        window.ethereum.on(
-            "accountsChanged",
-            async accounts => {
-
-                if (
-                    !accounts ||
-                    !accounts.length
-                ) {
-
-                    logoutApplication();
-
-                    return;
-                }
+        const regionInput =
+            $("registerRegion");
 
 
-                walletAddress =
-                    accounts[0]
-                        .toLowerCase();
+        if (regionInput) {
 
-
-                sessionStorage.setItem(
-                    "lr_wallet",
-                    walletAddress
+            regionInput.value =
+                regionLabel(
+                    identity.regionId
                 );
+        }
+    }
+}
 
 
-                await loadIdentity();
+/* =========================================================
+   PANEL HELPER
+   ========================================================= */
+
+function closePanel(
+    id
+) {
+
+    hide(id);
+}
+
+
+/* =========================================================
+   SEARCH EVENTS
+   ========================================================= */
+
+function setupSearchEvents() {
+
+    const input =
+        $("landSearchInput");
+
+
+    if (!input) {
+        return;
+    }
+
+
+    input.addEventListener(
+        "keydown",
+        event => {
+
+            if (
+                event.key ===
+                "Enter"
+            ) {
+
+                event.preventDefault();
+
+                searchLand();
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   WALLET EVENTS
+   ========================================================= */
+
+function setupWalletEvents() {
+
+    if (!window.ethereum) {
+        return;
+    }
+
+
+    window.ethereum.on(
+        "accountsChanged",
+        async accounts => {
+
+            /*
+             * MetaMask disconnected.
+             */
+
+            if (
+                !accounts ||
+                !accounts.length
+            ) {
+
+                logoutApplication();
+
+                return;
+            }
+
+
+            walletAddress =
+                accounts[0]
+                    .toLowerCase();
+
+
+            sessionStorage.setItem(
+                "lr_wallet",
+                walletAddress
+            );
+
+
+            try {
+
+                const registered =
+                    await loadIdentity();
+
 
                 await loadBlockchain();
 
+
                 updateSessionUI();
 
-                if (identity) {
+
+                if (
+                    registered
+                ) {
 
                     await initializeApplication();
 
                 } else {
 
-                    renderPublicDashboard();
+                    notify(
+                        "The selected MetaMask account is not registered in this system.",
+                        "error"
+                    );
                 }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Account change error:",
+                    error
+                );
+
+                notify(
+                    "Unable to load the selected MetaMask account.",
+                    "error"
+                );
             }
-        );
+        }
+    );
 
 
-        window.ethereum.on(
-            "chainChanged",
-            async () => {
+    window.ethereum.on(
+        "chainChanged",
+        async () => {
 
-                await loadBlockchain();
+            await loadBlockchain();
 
-                if (identity) {
 
-                    await loadDashboard();
-                }
-            }
-        );
-    }
+            notify(
+                "Blockchain network changed.",
+                "info"
+            );
+        }
+    );
 }
 
 
@@ -3407,7 +5746,20 @@ function bindEvents() {
 
 async function restoreSession() {
 
-    if (!window.ethereum) {
+    const savedWallet =
+        sessionStorage.getItem(
+            "lr_wallet"
+        );
+
+
+    /*
+     * No previous login.
+     * Start in public mode.
+     */
+
+    if (!savedWallet) {
+
+        updateSessionUI();
 
         renderPublicDashboard();
 
@@ -3415,13 +5767,726 @@ async function restoreSession() {
     }
 
 
-    const savedWallet =
-        sessionStorage.getItem(
+    walletAddress =
+        savedWallet.toLowerCase();
+
+
+    try {
+
+        const registered =
+            await loadIdentity();
+
+
+        await loadBlockchain();
+
+
+        updateSessionUI();
+
+
+        if (
+            registered
+        ) {
+
+            await initializeApplication();
+
+        } else {
+
+            sessionStorage.removeItem(
+                "lr_wallet"
+            );
+
+
+            walletAddress =
+                null;
+
+
+            identity =
+                null;
+
+
+            updateSessionUI();
+
+
+            renderPublicDashboard();
+        }
+
+
+    } catch (error) {
+
+        console.warn(
+            "Session restoration failed:",
+            error.message
+        );
+
+
+        walletAddress =
+            null;
+
+
+        identity =
+            null;
+
+
+        sessionStorage.removeItem(
             "lr_wallet"
         );
 
 
-    if (!savedWallet) {
+        updateSessionUI();
+
+
+        renderPublicDashboard();
+    }
+}
+
+
+/* =========================================================
+   EVENT / FORM BINDINGS
+   ========================================================= */
+
+function setupBindings() {
+
+    /*
+     * Header
+     */
+
+    $("connectWalletBtn")
+        ?.addEventListener(
+            "click",
+            connectWallet
+        );
+
+
+    $("logoutWalletBtn")
+        ?.addEventListener(
+            "click",
+            logoutApplication
+        );
+
+
+    /*
+     * Forms
+     */
+
+    $("registerForm")
+        ?.addEventListener(
+            "submit",
+            registerLand
+        );
+
+
+    $("allocationForm")
+        ?.addEventListener(
+            "submit",
+            allocateLand
+        );
+
+
+    $("requestForm")
+        ?.addEventListener(
+            "submit",
+            createLandRequest
+        );
+
+
+    /*
+     * Request type.
+     */
+
+    $("requestType")
+        ?.addEventListener(
+            "change",
+            handleRequestTypeChange
+        );
+
+        /*
+     * Request status filter.
+     */
+    $("requestStatusFilter")
+        ?.addEventListener(
+            "change",
+            loadRequests
+        );    
+
+
+    /*
+     * Land search.
+     */
+
+    setupSearchEvents();
+
+
+    /*
+     * MetaMask events.
+     */
+
+    setupWalletEvents();
+}
+
+
+/* =========================================================
+   INITIAL APPLICATION LOAD
+   ========================================================= */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+
+        try {
+
+            setupBindings();
+
+
+            /*
+             * Start with the public UI.
+             */
+
+            updateSessionUI();
+
+            renderPublicDashboard();
+
+
+            /*
+             * Check blockchain availability.
+             */
+
+            await loadBlockchain();
+
+
+            /*
+             * Restore a previous authenticated
+             * session if one exists.
+             */
+
+            await restoreSession();
+
+
+        } catch (error) {
+
+            console.error(
+                "Application initialization error:",
+                error
+            );
+
+
+            notify(
+                "Application initialization failed.",
+                "error"
+            );
+        }
+    }
+);
+/* =========================================================
+   GLOBAL COMPATIBILITY HELPERS
+   ========================================================= */
+
+/*
+ * Some buttons in the existing HTML may call these
+ * functions directly through onclick handlers.
+ *
+ * Keep these wrappers so the existing HTML does not
+ * need to be replaced.
+ */
+
+
+/* =========================================================
+   DASHBOARD NAVIGATION
+   ========================================================= */
+
+function openDashboard() {
+
+    showPage("dashboard");
+}
+
+
+function openLands() {
+
+    showPage("lands");
+}
+
+
+function openRequests() {
+
+    showPage("requests");
+}
+
+
+function openDocuments() {
+
+    showPage("documents");
+}
+
+
+function openHistory() {
+
+    showPage("history");
+}
+
+
+function openAudit() {
+
+    showPage("audit");
+}
+
+
+/* =========================================================
+   PUBLIC SEARCH RESET
+   ========================================================= */
+
+function clearLandSearch() {
+
+    const input =
+        $("landSearchInput");
+
+
+    if (input) {
+
+        input.value = "";
+    }
+
+
+    if ($("landResults")) {
+
+        $("landResults").innerHTML = `
+
+            <div class="empty">
+
+                <h3>
+                    Search the land registry
+                </h3>
+
+                <p>
+                    Enter a Land ID or Survey Number
+                    to search for a specific record.
+                </p>
+
+            </div>
+
+        `;
+    }
+}
+
+
+/* =========================================================
+   REQUEST LAND SELECTION
+   ========================================================= */
+
+function setRequestLand(
+    landId
+) {
+
+    const input =
+        $("requestLandId");
+
+
+    if (input) {
+
+        input.value =
+            landId;
+    }
+
+
+    showPage(
+        "requests"
+    );
+}
+
+
+/* =========================================================
+   REQUEST PANEL
+   ========================================================= */
+
+function openRequestPanel() {
+
+    if (
+        identity?.role !==
+        "CITIZEN"
+    ) {
+
+        notify(
+            "Only citizens can create land requests.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    show(
+        "requestPanel"
+    );
+
+
+    configureRequestForm();
+}
+
+
+function closeRequestPanel() {
+
+    hide(
+        "requestPanel"
+    );
+
+
+    resetRequestForm();
+}
+
+
+/* =========================================================
+   REGISTER LAND PANEL
+   ========================================================= */
+
+function closeRegisterPanel() {
+
+    hide(
+        "registerLandPanel"
+    );
+
+
+    resetRegisterForm();
+}
+
+
+/* =========================================================
+   ALLOCATION PANEL
+   ========================================================= */
+
+function closeAllocationPanel() {
+
+    hide(
+        "allocationPanel"
+    );
+
+
+    resetAllocationForm();
+}
+
+
+/* =========================================================
+   DOCUMENT ACCESS HELPERS
+   ========================================================= */
+
+function viewLandDocuments(
+    landId
+) {
+
+    loadDocumentsForLand(
+        landId
+    );
+}
+
+
+/* =========================================================
+   HISTORY ACCESS
+   ========================================================= */
+
+function viewLandHistory(
+    landId
+) {
+
+    loadHistoryFor(
+        landId
+    );
+}
+
+
+/* =========================================================
+   ROLE CHECK HELPERS
+   ========================================================= */
+
+function isCitizen() {
+
+    return (
+        identity?.role ===
+        "CITIZEN"
+    );
+}
+
+
+function isOfficer() {
+
+    return (
+        identity?.role ===
+        "LAND_ADMIN_OFFICER"
+    );
+}
+
+
+function isSupervisor() {
+
+    return (
+        identity?.role ===
+        "SUPERVISORY_AUTHORITY"
+    );
+}
+
+
+function isAuthenticated() {
+
+    return !!identity;
+}
+
+
+/* =========================================================
+   CURRENT USER
+   ========================================================= */
+
+function getCurrentUserId() {
+
+    return identity?.userId ||
+        null;
+}
+
+
+function getCurrentRegionId() {
+
+    return identity?.regionId ||
+        null;
+}
+
+
+/* =========================================================
+   LAND ACCESS CHECK
+   ========================================================= */
+
+function canAccessLand(
+    land
+) {
+
+    if (!land) {
+        return false;
+    }
+
+
+    /*
+     * Supervisor:
+     * system-wide access.
+     */
+
+    if (
+        isSupervisor()
+    ) {
+
+        return true;
+    }
+
+
+    /*
+     * Officer:
+     * regional access.
+     */
+
+    if (
+        isOfficer()
+    ) {
+
+        return (
+            land.regionId ===
+            identity.regionId
+        );
+    }
+
+
+    /*
+     * Citizen:
+     * own land only.
+     */
+
+    if (
+        isCitizen()
+    ) {
+
+        return (
+            land.currentOwnerId ===
+            identity.userId
+        );
+    }
+
+
+    /*
+     * Public:
+     * only search results are displayed.
+     */
+
+    return true;
+}
+
+
+/* =========================================================
+   REQUEST ACCESS CHECK
+   ========================================================= */
+
+function canAccessRequest(
+    request
+) {
+
+    if (!identity || !request) {
+        return false;
+    }
+
+
+    if (
+        isSupervisor()
+    ) {
+
+        return true;
+    }
+
+
+    if (
+        isOfficer()
+    ) {
+
+        return (
+            request.regionId ===
+            identity.regionId
+        );
+    }
+
+
+    if (
+        isCitizen()
+    ) {
+
+        return (
+
+            request.requesterId ===
+                identity.userId ||
+
+            request.sellerId ===
+                identity.userId ||
+
+            request.buyerId ===
+                identity.userId
+        );
+    }
+
+
+    return false;
+}
+
+
+/* =========================================================
+   SAFE OPEN LAND
+   ========================================================= */
+
+async function openLand(
+    landId
+) {
+
+    try {
+
+        const result =
+            await api(
+                `/lands/${encodeURIComponent(
+                    landId
+                )}`
+            );
+
+
+        const land =
+            extractData(
+                result
+            );
+
+
+        if (!canAccessLand(land)) {
+
+            notify(
+                "You do not have permission to view this land record.",
+                "error"
+            );
+
+            return;
+        }
+
+
+        renderLands(
+            [land]
+        );
+
+
+        showPage(
+            "lands"
+        );
+
+
+    } catch (error) {
+
+        notify(
+            error.message,
+            "error"
+        );
+    }
+}
+
+
+/* =========================================================
+   SAFE OPEN REQUEST
+   ========================================================= */
+
+async function openRequest(
+    requestId
+) {
+
+    if (!identity) {
+
+        notify(
+            "Authentication is required.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    const request =
+        currentRequests.find(
+            item =>
+                item.requestId ===
+                requestId
+        );
+
+
+    if (!request) {
+
+        notify(
+            "Request not found.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    if (
+        !canAccessRequest(
+            request
+        )
+    ) {
+
+        notify(
+            "You do not have permission to view this request.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    viewRequestDetails(
+        requestId
+    );
+}
+
+
+/* =========================================================
+   REFRESH EVERYTHING
+   ========================================================= */
+
+async function refreshApplication() {
+
+    if (!identity) {
 
         await loadBlockchain();
 
@@ -3433,70 +6498,234 @@ async function restoreSession() {
 
     try {
 
-        const accounts =
-            await window.ethereum.request({
-                method: "eth_accounts"
-            });
+        await loadBlockchain();
+
+        await loadDashboard();
+
+        await loadRequests();
+
+        await loadDocuments();
 
 
         if (
-            !accounts ||
-            !accounts.length
+            isOfficer() ||
+            isSupervisor()
         ) {
 
-            await loadBlockchain();
-
-            renderPublicDashboard();
-
-            return;
+            await loadAudit();
         }
 
 
-        walletAddress =
-            accounts[0]
-                .toLowerCase();
+        notify(
+            "Application data refreshed.",
+            "success"
+        );
 
-
-        await loadIdentity();
-
-        await loadBlockchain();
-
-        updateSessionUI();
-
-
-        if (identity) {
-
-            await initializeApplication();
-
-        } else {
-
-            renderPublicDashboard();
-        }
 
     } catch (error) {
 
-        console.error(
-            "Session restore failed:",
-            error
+        notify(
+            error.message,
+            "error"
         );
-
-        renderPublicDashboard();
     }
 }
 
 
 /* =========================================================
-   START APPLICATION
+   PUBLIC MODE
    ========================================================= */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    async () => {
+function enterPublicMode() {
 
-        bindEvents();
+    identity = null;
 
-        updateRequestFields();
+    walletAddress = null;
 
-        await restoreSession();
+
+    updateSessionUI();
+
+    renderPublicDashboard();
+
+    showPage(
+        "dashboard"
+    );
+}
+
+
+/* =========================================================
+   NETWORK LABEL
+   ========================================================= */
+
+function blockchainNetworkLabel() {
+
+    if (!blockchainStatus) {
+
+        return "Offline";
     }
-);
+
+
+    if (
+        blockchainStatus.networkMatches ===
+        false
+    ) {
+
+        return "Network mismatch";
+    }
+
+
+    return "Ganache";
+}
+
+
+/* =========================================================
+   DEBUG INFORMATION
+   ========================================================= */
+
+function getApplicationState() {
+
+    return {
+
+        walletAddress,
+
+        identity,
+
+        blockchainStatus,
+
+        currentLands,
+
+        currentRequests
+    };
+}
+
+
+/* =========================================================
+   DEVELOPMENT CONSOLE
+   ========================================================= */
+
+window.landRegistryApp = {
+
+    connectWallet,
+
+    logoutApplication,
+
+    searchLand,
+
+    loadAllLands,
+
+    loadDashboard,
+
+    loadRequests,
+
+    loadDocuments,
+
+    loadAudit,
+
+    loadHistoryFor,
+
+    startRequest,
+
+    createLandRequest,
+
+    acceptRequest,
+
+    reviewRequest,
+
+    approveRequest,
+
+    rejectRequest,
+
+    openRegister,
+
+    registerLand,
+
+    openAllocation,
+
+    allocateLand,
+
+    refreshApplication,
+
+    getApplicationState,
+
+    blockchainNetworkLabel
+
+};
+
+
+/* =========================================================
+   FINAL SAFETY INITIALIZATION
+   ========================================================= */
+
+/*
+ * Prevent accidental browser errors when a UI element
+ * references an optional function.
+ */
+
+window.searchLand =
+    searchLand;
+
+window.loadAllLands =
+    loadAllLands;
+
+window.loadHistoryFor =
+    loadHistoryFor;
+
+window.loadHistoryFromInput =
+    loadHistoryFromInput;
+
+window.startRequest =
+    startRequest;
+
+window.acceptRequest =
+    acceptRequest;
+
+window.reviewRequest =
+    reviewRequest;
+
+window.approveRequest =
+    approveRequest;
+
+window.rejectRequest =
+    rejectRequest;
+
+window.viewRequestDetails =
+    viewRequestDetails;
+
+window.loadDocumentsForRequest =
+    loadDocumentsForRequest;
+
+window.loadDocumentsForLand =
+    loadDocumentsForLand;
+
+window.openDocument =
+    openDocument;
+
+window.openIpfsDocument =
+    openIpfsDocument;
+
+window.openRegister =
+    openRegister;
+
+window.openAllocation =
+    openAllocation;
+
+window.showPage =
+    showPage;
+
+window.closePanel =
+    closePanel;
+
+window.closeRequestPanel =
+    closeRequestPanel;
+
+window.closeRegisterPanel =
+    closeRegisterPanel;
+
+window.closeAllocationPanel =
+    closeAllocationPanel;
+
+window.logoutApplication =
+    logoutApplication;
+
+window.connectWallet =
+    connectWallet;
