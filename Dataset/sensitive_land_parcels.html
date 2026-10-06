@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Land Parcels V2</title>
+<style>
+body{font-family:Arial,sans-serif;margin:30px;background:#f5f7fb;color:#172033}
+h1{color:#174f91}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+select,input{padding:10px;border:1px solid #ccd5e0;border-radius:6px}
+table{width:100%;border-collapse:collapse;background:white}
+th{background:#174f91;color:white;padding:12px;text-align:left}
+td{padding:10px;border-bottom:1px solid #ddd}
+tr:hover{background:#eef6ff}
+.wrap{overflow:auto}
+</style>
+</head>
+<body>
+
+<h1>Demo Land Parcels – V2</h1>
+<p>Synthetic/demo land records for system testing and implementation.</p>
+
+<div class="controls">
+<select id="region">
+<option value="all">All Regions</option>
+<option value="Region 1">Region 1</option>
+<option value="Region 2">Region 2</option>
+</select>
+
+<select id="type">
+<option value="all">All Land Types</option>
+<option>Residential</option>
+<option>Commercial</option>
+<option>Agricultural</option>
+<option>Industrial</option>
+</select>
+
+<input id="search" type="text" placeholder="Search parcel or location">
+</div>
+
+<p id="total"></p>
+
+<div class="wrap">
+<table>
+<thead>
+<tr>
+<th>Parcel</th>
+<th>Region</th>
+<th>Latitude</th>
+<th>Longitude</th>
+<th>Land Type</th>
+<th>Area</th>
+<th>Zone</th>
+<th>Location</th>
+</tr>
+</thead>
+<tbody id="data"></tbody>
+</table>
+</div>
+
+<script>
+const parcels = [
+["R1-01",16.463764,80.623212,"Residential","2,500 SQ_FT","URBAN_RESIDENTIAL","Ajit Singh Nagar, Vijayawada","Region 1"],
+["R1-02",16.465120,80.625340,"Residential","3,000 SQ_FT","RESIDENTIAL-A","Payakapuram, Vijayawada","Region 1"],
+["R1-03",16.466480,80.627150,"Commercial","4,200 SQ_FT","COMMERCIAL-A","Bhavanipuram, Vijayawada","Region 1"],
+["R1-04",16.467820,80.629020,"Agricultural","1.25 ACRE","AGRICULTURAL-A","Riverland Agricultural Belt","Region 1"],
+["R1-05",16.469150,80.630880,"Industrial","12,000 SQ_FT","INDUSTRIAL-A","Industrial Development Zone","Region 1"],
+["R1-06",16.470520,80.632740,"Residential","3,500 SQ_FT","RESIDENTIAL-B","Gunadala, Vijayawada","Region 1"],
+["R1-07",16.471860,80.634610,"Commercial","5,000 SQ_FT","COMMERCIAL-B","Auto Nagar Extension","Region 1"],
+["R1-08",16.473210,80.636450,"Agricultural","2.00 ACRE","AGRICULTURAL-B","Riverland Farming Zone","Region 1"],
+["R1-09",16.474570,80.638320,"Industrial","15,000 SQ_FT","INDUSTRIAL-B","Manufacturing Corridor","Region 1"],
+["R1-10",16.475920,80.640180,"Residential","4,000 SQ_FT","RESIDENTIAL-C","Urban Expansion Area","Region 1"],
+
+["R2-01",16.495120,80.650340,"Residential","2,400 SQ_FT","URBAN_RESIDENTIAL","Ramavarappadu Extension","Region 2"],
+["R2-02",16.496480,80.652150,"Commercial","4,500 SQ_FT","COMMERCIAL-A","Vijayawada Commercial Corridor","Region 2"],
+["R2-03",16.497820,80.654020,"Agricultural","1.50 ACRE","AGRICULTURAL-A","Agricultural Development Zone","Region 2"],
+["R2-04",16.499150,80.655880,"Industrial","10,000 SQ_FT","INDUSTRIAL-A","Industrial Growth Zone","Region 2"],
+["R2-05",16.500520,80.657740,"Residential","3,200 SQ_FT","RESIDENTIAL-A","Urban Residential Extension","Region 2"],
+["R2-06",16.501860,80.659610,"Commercial","6,000 SQ_FT","COMMERCIAL-B","Main Commercial Zone","Region 2"],
+["R2-07",16.503210,80.661450,"Agricultural","2.25 ACRE","AGRICULTURAL-B","Riverland Agricultural Zone","Region 2"],
+["R2-08",16.504570,80.663320,"Industrial","18,000 SQ_FT","INDUSTRIAL-B","Industrial Estate Extension","Region 2"],
+["R2-09",16.505920,80.665180,"Residential","4,500 SQ_FT","RESIDENTIAL-B","Residential Development Area","Region 2"],
+["R2-10",16.507280,80.667040,"Commercial","7,500 SQ_FT","COMMERCIAL-C","Commercial Expansion Zone","Region 2"]
+];
+
+const table = document.getElementById("data");
+const region = document.getElementById("region");
+const type = document.getElementById("type");
+const search = document.getElementById("search");
+const total = document.getElementById("total");
+
+function showData(){
+    const r = region.value;
+    const t = type.value;
+    const s = search.value.toLowerCase();
+
+    table.innerHTML = "";
+
+    let count = 0;
+
+    parcels.forEach(p => {
+        const matchesRegion = r === "all" || p[7] === r;
+        const matchesType = t === "all" || p[3] === t;
+        const matchesSearch =
+            p[0].toLowerCase().includes(s) ||
+            p[6].toLowerCase().includes(s) ||
+            p[5].toLowerCase().includes(s);
+
+        if(matchesRegion && matchesType && matchesSearch){
+            count++;
+
+            const row = document.createElement("tr");
+
+            row.innerHTML =
+                "<td><b>" + p[0] + "</b></td>" +
+                "<td>" + p[7] + "</td>" +
+                "<td>" + p[1].toFixed(6) + "</td>" +
+                "<td>" + p[2].toFixed(6) + "</td>" +
+                "<td>" + p[3] + "</td>" +
+                "<td>" + p[4] + "</td>" +
+                "<td>" + p[5] + "</td>" +
+                "<td>" + p[6] + "</td>";
+
+            table.appendChild(row);
+        }
+    });
+
+    total.textContent = "Showing " + count + " of " + parcels.length + " parcels";
+}
+
+region.addEventListener("change", showData);
+type.addEventListener("change", showData);
+search.addEventListener("input", showData);
+
+showData();
+</script>
+
+</body>
+</html>
